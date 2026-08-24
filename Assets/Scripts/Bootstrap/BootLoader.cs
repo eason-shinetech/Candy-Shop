@@ -21,6 +21,8 @@ namespace CandyShop
         private void Start()
         {
             var save = SaveDataService.Load();
+            I18nService.Initialize();
+            StaminaService.RefreshOnDateRoll(); // stamina refresh rides with boot sign-in (spec 8.2)
             EconomyManager.Init(save, Resources.Load<EconomyConfig>("Data/EconomyConfig"));
             AdServiceLocator.Service = new StubAdService(
                 Resources.Load<AdConfig>("Data/AdConfig"), save);

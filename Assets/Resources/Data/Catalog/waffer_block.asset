@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: waffer_block
   displayNameZh: "\u5A01\u5316\u7CD6"
+  displayNameEn: Candy
   prefab: {fileID: 570707989607029135, guid: bc574ed54f290b546a13a08b2d3ab78f, type: 3}
   isStarter: 0
   icon: {fileID: 0}

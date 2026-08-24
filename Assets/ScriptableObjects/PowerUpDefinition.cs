@@ -9,6 +9,20 @@ namespace CandyShop
         [Header("Identity")]
         public string powerUpId; // magnet | tornado | freeze
         public string displayNameZh;
+        public string displayNameEn;
+
+        // Player-facing name: i18n key first (powerup_magnet/tornado/freeze), zh as fallback.
+        public string LocalizedName
+        {
+            get
+            {
+                string key = "powerup_" + powerUpId;
+                string localized = I18nService.Get(key);
+                if (!string.IsNullOrEmpty(localized) && localized != key) return localized;
+                return I18nService.Language == "en" && !string.IsNullOrEmpty(displayNameEn)
+                    ? displayNameEn : displayNameZh;
+            }
+        }
 
         [Header("Economy")]
         public int buyCost; // coins AND a rewarded ad on buy

@@ -8,6 +8,10 @@ namespace CandyShop
     {
         public static PowerUpVfxPlayer Instance { get; private set; }
 
+        // Live looping instances (tornado/freeze) so run end can stop them all.
+        private readonly System.Collections.Generic.List<GameObject> _loops =
+            new System.Collections.Generic.List<GameObject>();
+
         private void Awake() => Instance = this;
 
         // One-shot burst (magnet). Auto-destroys after the particle lifetime.
@@ -31,12 +35,15 @@ namespace CandyShop
                 Debug.LogError("PowerUpVfxPlayer: missing loop VFX prefab");
                 return null;
             }
-            return Instantiate(prefab, position, Quaternion.identity);
+            var go = Instantiate(prefab, position, Quaternion.identity);
+            _loops.Add(go);
+            return go;
         }
 
         public void StopLoop(GameObject handle)
         {
             if (handle == null) return;
+            _loops.Remove(handle);
             foreach (var ps in handle.GetComponentsInChildren<ParticleSystem>())
             {
                 var main = ps.main;
@@ -44,6 +51,14 @@ namespace CandyShop
                 ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             }
             StartCoroutine(DestroyAfterLifetime(handle));
+        }
+
+        // Run end (Game Over / Shift Over / quit): stop every active loop immediately.
+        public void StopAllLoops()
+        {
+            for (int i = _loops.Count - 1; i >= 0; i--)
+                StopLoop(_loops[i]);
+            _loops.Clear();
         }
 
         private IEnumerator DestroyAfterLifetime(GameObject go)

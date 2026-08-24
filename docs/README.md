@@ -25,3 +25,4 @@ Cursor owns **design and plan documents**. OpenCode owns **Unity implementation*
 - Unity UI: follow [Impeccable adapter](superpowers/specs/2026-08-24-candy-shop-ui-impeccable.md) + root `PRODUCT.md` / `DESIGN.md`. Art bible wins over generic Impeccable SaaS looks.
 - UI motion: [UI Effect](https://github.com/mob-sakai/UIEffect). First-run tutorial: [Tutorial Spotlight](https://assetstore.unity.com/packages/tools/gui/tutorial-spotlight-363804). Do not write a custom dim overlay.
 - Reserve ad interface (`IAdService` stub). Restock power-up = coins AND ad. Use is free if count > 0. Other ads opt-in. No auto-play during picking.
+- Daily stamina **20**; spend 1 per **current** guest; perfect +1 / pass +0 / fail −3. No stamina ads. Spec §8.2.

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: jelly_B
   displayNameZh: "\u679C\u51BB\u7CD6"
+  displayNameEn: Jelly
   prefab: {fileID: 8996348168711482387, guid: 77d9342872b25b9448fb551d4aeb0901, type: 3}
   isStarter: 0
   icon: {fileID: 0}

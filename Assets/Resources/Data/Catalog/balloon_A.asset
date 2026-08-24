@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: balloon_A
   displayNameZh: "\u6C14\u7403\u8F6F\u7CD6"
+  displayNameEn: Balloon Gummy
   prefab: {fileID: 5704418825081939585, guid: d59c129e1a2166d4cbfd9d12f2bf0782, type: 3}
   isStarter: 1
   icon: {fileID: 0}

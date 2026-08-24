@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: lollipop_B
   displayNameZh: "\u68D2\u68D2\u7CD6"
+  displayNameEn: Lollipop
   prefab: {fileID: 8623793184480789059, guid: 9e07e6c357443304a90da3e830b03a6d, type: 3}
   isStarter: 0
   icon: {fileID: 0}

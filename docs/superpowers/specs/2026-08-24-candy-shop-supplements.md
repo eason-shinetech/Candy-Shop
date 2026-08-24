@@ -33,20 +33,24 @@ Three steps, skip 跳过 on 2 and 3. Save `tutorialDone`. Timer starts **after**
 - Correct pick: candy flies to the matching chip; chip punch; **light haptic**.
 - Wrong pick: short shake; star pops; **medium haptic**.
 - **Combo (visual only):** consecutive correct picks show `连击 x2` … floating text. **No extra coins** (economy stays the speed formula). Combo breaks on wrong or on serve.
-- **Perfect serve:** 0 wrong picks this customer → extra **+5 coins**, stamp `完美`, and **restore 1 star** if stars < 3. Speed-reward 看广告翻倍 does not double the +5.
+- **Perfect serve:** 0 wrong picks this customer → extra **+5 coins**, stamp `完美`, restore **1 star** if stars < 3, and **stamina +1** (cap 20, spec §8.2). Speed-reward 看广告翻倍 does not double the +5.
 - Serve: small confetti burst (pastel, ≤80 particles) + current portrait happy frame.
 
 ### 1.4 Meta on Main Menu
 
 - `历史最佳：服务 N 位客人` (max customers in one run)
-- Coins, streak **7 dots** (filled = days this cycle)
+- Coins, **stamina n/20**, streak **7 dots** (filled = days this cycle)
 - Settings: 音乐 / 音效 / **振动** (three toggles)
 - After buying a recipe: toast `新糖果上架：{name}` on next Game scene load (once)
-- Banner `今日配方` (progress / 已完成). Tap: Recipe Shop if locked, else 开始营业
+- Banner `今日配方` (progress / 已完成). Tap: Recipe Shop if locked, else 开始营业 (same stamina gate as the start button)
 
 ### 1.10 Daily featured-recipe challenge
 
 Full rules: main spec **§8.1**. Quota 12 correct picks, 70% order bias when unlocked, 20% off in shop when locked, reward +120 coins and +1 Freeze, once per local date.
+
+### 1.11 Daily stamina (体力)
+
+Full rules: main spec **§8.2**. 20 per local date. Spend 1 when a guest becomes **current**. Perfect +1 / pass +0 / confirmed fail −3. Clamp 0–20. Menu gate at 0. After a successful serve at 0 → Shift Over (no revive, no fail −3). Waiting queue portraits do not spend stamina.
 
 ### 1.5 Recipe shop UX
 
@@ -61,7 +65,8 @@ Full rules: main spec **§8.1**. Quota 12 correct picks, 70% order bias when unl
 - Current customer card larger; waiting two dimmed
 - Timer `< 5s`: bar already red; add a **soft** screen-edge vignette (not a full red flash)
 - Power-up badge count in a candy-dot; `0` shows a small `+`
-- Pause **放弃本局** already needs confirm; copy: `真的要打烊吗？本局星星和进度会结束`
+- Stamina `n/20` next to coins (icon + number)
+- Pause **放弃本局** already needs confirm; copy: `真的要打烊吗？当前客人会失败（体力-3），本局星星和进度会结束`
 
 ### 1.7 Pile feel
 
@@ -73,7 +78,8 @@ Full rules: main spec **§8.1**. Quota 12 correct picks, 70% order bias when unl
 
 - `本局服务 {n} 位` / `赚到 {coins} 金币` / `历史最佳 {best}`
 - If `n` beat best, badge `新纪录`
-- Primary: 回到主菜单. Secondary: revive ad (existing)
+- Primary: 回到主菜单. Secondary: revive ad (existing). Leaving without revive applies stamina fail −3.
+- Distinct **Shift Over** screen when stamina blocks the next guest (no revive).
 
 ### 1.9 Haptics
 
@@ -125,7 +131,8 @@ Do **not** implement these in the first OpenCode pass.
 - Landscape
 - Coin combo that stacks with speed bonus (visual combo only)
 - Free recipe from ads
-- Punishing “fatigue” (smaller colliders over time)
+- Punishing “fatigue” (smaller colliders over time). Daily **stamina** (§8.2) is in MVP and is not this.
+- Stamina ads / coin refill / timed regen
 
 ---
 

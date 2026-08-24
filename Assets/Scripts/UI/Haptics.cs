@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CandyShop
 {
-    // Plugin-free Android haptics, gated by the 振动 setting. Never used for ad starts.
+    // Plugin-free Android haptics, gated by the haptics setting. Never used for ad starts.
     public static class Haptics
     {
         public static void Light()

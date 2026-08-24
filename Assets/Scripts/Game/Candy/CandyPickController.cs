@@ -11,6 +11,7 @@ namespace CandyShop
         public float maxPickDragPixels = 40f;
 
         private bool _touchActive;
+        private bool _startedOverUi;
         private Vector2 _startPos;
         private int _fingerId = -1;
 
@@ -28,12 +29,16 @@ namespace CandyShop
                         _touchActive = true;
                         _startPos = touch.position;
                         _fingerId = touch.fingerId;
+                        // UI-over test must happen at Began: a finger sliding off a
+                        // button must not pick through the HUD (supplements 1.1).
+                        _startedOverUi = EventSystem.current != null &&
+                                         EventSystem.current.IsPointerOverGameObject(touch.fingerId);
                     }
                     else if (touch.phase == TouchPhase.Ended && _touchActive && touch.fingerId == _fingerId)
                     {
                         _touchActive = false;
                         Vector2 delta = touch.position - _startPos;
-                        if (delta.magnitude <= maxPickDragPixels)
+                        if (!_startedOverUi && delta.magnitude <= maxPickDragPixels)
                             TryPick(touch.position);
                         _fingerId = -1;
                     }
@@ -52,12 +57,15 @@ namespace CandyShop
             {
                 _touchActive = true;
                 _startPos = Input.mousePosition;
+                // Same HUD rule as touch: record UI-over at press time (Editor QA).
+                _startedOverUi = EventSystem.current != null &&
+                                 EventSystem.current.IsPointerOverGameObject();
             }
             else if (Input.GetMouseButtonUp(0) && _touchActive)
             {
                 _touchActive = false;
                 Vector2 delta = (Vector2)Input.mousePosition - _startPos;
-                if (delta.magnitude <= maxPickDragPixels)
+                if (!_startedOverUi && delta.magnitude <= maxPickDragPixels)
                     TryPick(Input.mousePosition);
             }
 #endif

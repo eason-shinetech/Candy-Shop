@@ -35,11 +35,12 @@ namespace CandyShop
         private void BuildUI()
         {
             var canvas = UIKit.CreateCanvas(null, "RecipeShop");
+            UIKit.CreateBackground(canvas.transform, "bg_main_menu");
             var safeRoot = new GameObject("SafeRoot", typeof(RectTransform)).GetComponent<RectTransform>();
             safeRoot.SetParent(canvas.transform, false);
             safeRoot.gameObject.AddComponent<SafeAreaFitter>();
 
-            var title = UIKit.CreateText(safeRoot, "配方商店", 80, UIKit.SugarPink);
+            var title = UIKit.CreateText(safeRoot, I18nService.Get("recipe_shop_title"), 80, UIKit.SugarPink);
             var trt = (RectTransform)title.transform;
             trt.anchorMin = new Vector2(0.5f, 1);
             trt.anchorMax = new Vector2(0.5f, 1);
@@ -50,10 +51,10 @@ namespace CandyShop
             coinsPanel.anchorMin = new Vector2(1, 1);
             coinsPanel.anchorMax = new Vector2(1, 1);
             coinsPanel.anchoredPosition = new Vector2(-160, -90);
-            _coinsText = UIKit.CreateText(coinsPanel, "金币 0", 40, UIKit.Cocoa);
+            _coinsText = UIKit.CreateText(coinsPanel, "", 40, UIKit.Cocoa);
             UIKit.Stretch((RectTransform)_coinsText.transform, coinsPanel);
 
-            var backBtn = UIKit.CreateButton(safeRoot, "← 返回", new Vector2(220, 100), UIKit.Grape, 36);
+            var backBtn = UIKit.CreateButton(safeRoot, I18nService.Get("btn_back"), new Vector2(220, 100), UIKit.Grape, 36);
             var brt = (RectTransform)backBtn.transform;
             brt.anchorMin = new Vector2(0, 1);
             brt.anchorMax = new Vector2(0, 1);
@@ -98,10 +99,11 @@ namespace CandyShop
             ip.sizeDelta = new Vector2(820, 520);
             ip.anchoredPosition = Vector2.zero;
 
-            var msg = UIKit.CreateText(ip, "金币不足", 48, UIKit.Cocoa);
+            var msg = UIKit.CreateText(ip, I18nService.Get("coins_short"), 48, UIKit.Cocoa);
             msg.rectTransform.anchoredPosition = new Vector2(0, 160);
 
-            var adBtn = UIKit.CreateButton(ip, "看广告获得 80 金币", new Vector2(640, 130), UIKit.SugarPink, 38);
+            var adBtn = UIKit.CreateButton(ip, I18nService.Get("ad_coins_80"), new Vector2(640, 130), UIKit.SugarPink, 38);
+            adBtn.name = "AdButton";
             adBtn.transform.localPosition = new Vector3(0, 10, 0);
             adBtn.onClick.AddListener(() =>
             {
@@ -117,7 +119,7 @@ namespace CandyShop
                 });
             });
 
-            var close = UIKit.CreateButton(ip, "取消", new Vector2(640, 110),
+            var close = UIKit.CreateButton(ip, I18nService.Get("btn_cancel"), new Vector2(640, 110),
                 new Color(0.75f, 0.72f, 0.68f), 36, UIKit.Cocoa);
             close.transform.localPosition = new Vector3(0, -160, 0);
             close.onClick.AddListener(() => dim.gameObject.SetActive(false));
@@ -128,7 +130,7 @@ namespace CandyShop
 
         private void RefreshCoins()
         {
-            _coinsText.text = "金币 " + EconomyManager.Coins;
+            _coinsText.text = string.Format(I18nService.Get("label_coins"), EconomyManager.Coins);
         }
 
         private void RebuildList()
@@ -159,18 +161,35 @@ namespace CandyShop
                 row.sizeDelta = new Vector2(0, rowH);
 
                 if (!owned)
-                    row.GetComponent<Image>().color *= new Color(1f, 1f, 1f, 1f); // locked rows slightly grey via text below
+                    row.GetComponent<Image>().color =
+                        new Color(0.93f, 0.9f, 0.86f); // locked rows slightly grey but readable (spec 10.3)
 
-                // Icon dot
-                var dot = UIKit.CreatePanel(row, "Dot", recipe.candyType.chipColor);
-                dot.sizeDelta = Vector2.one * 110;
-                dot.anchorMin = new Vector2(0, 0.5f);
-                dot.anchorMax = new Vector2(0, 0.5f);
-                dot.anchoredPosition = new Vector2(95, 0);
+                var candyIcon = UIKit.CreateIcon(row, UIKit.CandyIconPath(recipe.candyType.typeId), Vector2.one * 110f);
+                var iconRt = (RectTransform)candyIcon.transform;
+                iconRt.anchorMin = new Vector2(0, 0.5f);
+                iconRt.anchorMax = new Vector2(0, 0.5f);
+                iconRt.anchoredPosition = new Vector2(95, 0);
+                if (!owned)
+                {
+                    var lockImg = UIKit.CreateIcon(row, "icon_lock", Vector2.one * 44f);
+                    var lockRt = (RectTransform)lockImg.transform;
+                    lockRt.anchorMin = new Vector2(0, 0.5f);
+                    lockRt.anchorMax = new Vector2(0, 0.5f);
+                    lockRt.anchoredPosition = new Vector2(140, -36);
+                }
+                else
+                {
+                    var checkImg = UIKit.CreateIcon(row, "icon_check", Vector2.one * 44f);
+                    var checkRt = (RectTransform)checkImg.transform;
+                    checkRt.anchorMin = new Vector2(0, 0.5f);
+                    checkRt.anchorMax = new Vector2(0, 0.5f);
+                    checkRt.anchoredPosition = new Vector2(140, -36);
+                }
 
                 // Name + featured badge
                 var name = UIKit.CreateText(row,
-                    featured ? recipe.candyType.displayNameZh + "  [今日配方]" : recipe.candyType.displayNameZh,
+                    featured ? recipe.candyType.LocalizedName + "  " + I18nService.Get("recipe_featured_tag")
+                             : recipe.candyType.LocalizedName,
                     42, owned ? new Color(0.55f, 0.5f, 0.45f) : UIKit.Cocoa, TextAnchor.MiddleLeft, FontStyle.Bold);
                 var nrt = (RectTransform)name.transform;
                 nrt.anchorMin = new Vector2(0, 0.5f);
@@ -178,7 +197,8 @@ namespace CandyShop
                 nrt.offsetMin = new Vector2(180, -20);
                 nrt.offsetMax = new Vector2(-320, 50);
 
-                var sub = UIKit.CreateText(row, featured ? "解锁后才能完成今日挑战" : "新糖果配方",
+                var sub = UIKit.CreateText(row,
+                    featured ? I18nService.Get("daily_recipe_unlock_hint") : I18nService.Get("recipe_sub_normal"),
                     28, featured ? UIKit.Berry : UIKit.Grape, TextAnchor.MiddleLeft, FontStyle.Normal);
                 var subrt = (RectTransform)sub.transform;
                 subrt.anchorMin = new Vector2(0, 0.5f);
@@ -188,7 +208,7 @@ namespace CandyShop
 
                 if (owned)
                 {
-                    var ownedLabel = UIKit.CreateText(row, "已解锁", 38, new Color(0.6f, 0.6f, 0.58f),
+                    var ownedLabel = UIKit.CreateText(row, I18nService.Get("recipe_owned"), 38, new Color(0.6f, 0.6f, 0.58f),
                         TextAnchor.MiddleRight, FontStyle.Normal);
                     var ort = (RectTransform)ownedLabel.transform;
                     ort.anchorMin = new Vector2(1, 0.5f);
@@ -199,7 +219,7 @@ namespace CandyShop
                 else
                 {
                     bool afford = EconomyManager.Coins >= price;
-                    var buyBtn = UIKit.CreateButton(row, "购买 " + price,
+                    var buyBtn = UIKit.CreateButton(row, string.Format(I18nService.Get("recipe_buy"), price),
                         new Vector2(280, 110), afford ? UIKit.SugarPink : new Color(0.85f, 0.55f, 0.62f), 34);
                     var brrt = (RectTransform)buyBtn.transform;
                     brrt.anchorMin = new Vector2(1, 0.5f);
@@ -231,7 +251,17 @@ namespace CandyShop
             if (!EconomyManager.TrySpend(price))
             {
                 _insufficientRecipe = recipe;
-                _insufficientSheet.SetActive(true);
+                if (_insufficientSheet != null)
+                {
+                    // Disable ONLY the +80-ad button when no ad is ready; Cancel stays tappable
+                    // so the player can always close the sheet (review P1).
+                    var ads = AdServiceLocator.Service;
+                    bool adReady = ads != null && ads.IsReady(AdPlacement.reward_coins);
+                    var adBtnTr = _insufficientSheet.transform.Find("InsufficientPanel/AdButton");
+                    if (adBtnTr != null)
+                        adBtnTr.GetComponent<Button>().interactable = adReady;
+                    _insufficientSheet.SetActive(true);
+                }
                 return;
             }
 
@@ -240,7 +270,7 @@ namespace CandyShop
             save.unlockedRecipeIds = list.ToArray();
             SaveDataService.Save();
 
-            GameHUDController.PendingRecipeUnlockToast = recipe.candyType.displayNameZh;
+            GameHUDController.PendingRecipeUnlockToast = recipe.candyType.LocalizedName;
             RebuildList();
         }
     }

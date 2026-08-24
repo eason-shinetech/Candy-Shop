@@ -21,7 +21,8 @@
 - Style: **卡通可爱风**. Every generated image uses the art-bible prompt prefix. No mixed styles.
 - Power-ups Magnet / Tornado / Freeze each have a particle prefab; silent use is a bug.
 - Wrong candy: remove object, minus 1 star. 3 stars. Timer 0 or 0 stars = Game Over.
-- Persist coins, recipes, daily streak locally.
+- Persist coins, recipes, daily streak, **and daily stamina** locally.
+- Daily stamina: **20/day**; −1 when a guest becomes current; perfect +1 / pass +0 / confirmed fail −3. Spec §8.2.
 - Reserve `IAdService` (stub in MVP). Ads are opt-in only; see spec §14.
 - Numbers: copy from the spec; expose on ScriptableObjects for tuning.
 
@@ -47,6 +48,8 @@ Assets/Scripts/Economy/EconomyManager.cs
 Assets/Scripts/Save/SaveDataModel.cs
 Assets/Scripts/Save/SaveDataService.cs
 Assets/Scripts/Daily/DailySignInService.cs
+Assets/Scripts/Daily/StaminaService.cs
+Assets/ScriptableObjects/StaminaConfig.cs
 Assets/Scripts/Ads/IAdService.cs
 Assets/Scripts/Ads/StubAdService.cs
 Assets/Scripts/Ads/AdPlacement.cs
@@ -109,20 +112,32 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 
 - Implement order generation (1–3 types, 6–30 count, unlocked types only) and timer formula from spec.
 - Correct tap decrements; wrong tap removes candy and −1 star.
-- 0 stars or timer 0 → Game Over. Serve complete → coins → next customer.
-- Stars persist for the whole run.
+- 0 stars or timer 0 → Game Over. Serve complete → coins → next customer **only if stamina ≥ 1**.
+- Stars persist for the whole run. Stamina spend/settle is Task 5b but wire the hooks here so a guest becoming current calls `StaminaService`.
 
 **Done when:** A playtest can serve 2+ customers and fail both ways.
 
 ### Task 5: Economy, save, daily sign-in, recipes
 
-- JSON save fields from spec.
-- Boot: daily +200, streak, 7-day recipe, all-unlocked +500.
+- JSON save fields from spec (including `stamina`, `staminaDate`).
+- Boot: daily +200, streak, 7-day recipe, all-unlocked +500, **stamina refresh to 20 on a new local date**.
 - Daily featured-recipe challenge (§8.1): roll type, 12/12 progress, bias, shop 20% off if locked, reward 120 + 1 Freeze.
 - Recipe shop: one recipe per non-starter catalog candy (spec §4). Do not hardcode 7 names.
 - Serve reward formula from spec.
 
-**Done when:** Kill the app and reopen: coins/recipes/streak persist; claiming twice the same day does not double 200.
+**Done when:** Kill the app and reopen: coins/recipes/streak/**stamina** persist; claiming twice the same day does not double 200; a new calendar date refills stamina to 20.
+
+### Task 5b: Daily stamina (体力)
+
+- `StaminaConfig`: dailyMax 20, cost 1, perfect +1, pass 0, fail −3.
+- `StaminaService`: clamp 0–20; spend **only** when a guest becomes current (not waiting queue); save immediately.
+- Main Menu: `n/20`; 开始营业 blocked at 0 → empty sheet (i18n). Generate `icon_stamina.png` per art bible.
+- Serve: perfect +1 / pass +0. If then stamina < 1 → **Shift Over** (no revive, no fail −3).
+- Fail (stars/timer) or confirmed 放弃本局: −3 on leave without revive. Revive: same guest, no second spend, no −3.
+- HUD floating text: `体力-1` / `体力+1` / `体力-3`.
+- No stamina ads, no timed regen, no overflow.
+
+**Done when:** 20 → start guest → 19; perfect → 20; pass stays 19; fail-and-leave drops by 4 total (clamp 0); empty stamina cannot start a run; waiting portraits never spend.
 
 ### Task 6: Power-ups + VFX + ads stub
 
@@ -143,7 +158,7 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 - Import **UI Effect** (git UPM) and **Tutorial Spotlight** (Asset Store 363804). First-run uses `TutorialSpotlightManager`; buttons/panels use UI Effect. See [plugins](../specs/2026-08-24-candy-shop-unity-plugins.md).
 - Optional: `npx impeccable install --providers=opencode` so later UI passes use `/impeccable polish` on **Game-view screenshots**, not HTML.
 - Pause freezes timer without Freeze VFX.
-- Ship [supplements](../specs/2026-08-24-candy-shop-supplements.md) **§1**: tutorial, front-most pick, buried hint, perfect **star restore**, daily 今日配方, visual combo, best score, haptics, confetti, 7-dot streak.
+- Ship [supplements](../specs/2026-08-24-candy-shop-supplements.md) **§1**: tutorial, front-most pick, buried hint, perfect **star restore + stamina +1**, daily 今日配方, **stamina HUD / Shift Over**, visual combo, best score, haptics, confetti, 7-dot streak.
 - Do **not** build supplements §2 backlog.
 
 **Done when:** Full loop: menu → run → shop → sign-in popup → game over → menu, all portrait and cute.
@@ -158,6 +173,7 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 - Tornado reveals buried candies.
 - Freeze pauses timer only.
 - Landscape does not reflow.
+- Stamina: new day = 20; current guest −1; perfect +1; pass 0; leave-without-revive −3; Shift Over vs Game Over are different screens.
 
 ---
 

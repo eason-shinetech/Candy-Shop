@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: icecream_A
   displayNameZh: "\u51B0\u6DC7\u6DCB\u7CD6"
+  displayNameEn: Ice Cream
   prefab: {fileID: 2018232176275012153, guid: dfac3eab7eb256d4c8c81de8893c8f89, type: 3}
   isStarter: 0
   icon: {fileID: 0}

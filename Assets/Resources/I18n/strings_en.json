@@ -1,0 +1,376 @@
+{
+  "entries": [
+    {
+      "key": "app_title",
+      "value": "Candy Shop"
+    },
+    {
+      "key": "menu_subtitle",
+      "value": "Welcome! Ready to close up early today?"
+    },
+    {
+      "key": "menu_first_day",
+      "value": "Open your shop for the first day!"
+    },
+    {
+      "key": "btn_start",
+      "value": "Open Shop"
+    },
+    {
+      "key": "btn_recipes",
+      "value": "Recipes"
+    },
+    {
+      "key": "btn_settings",
+      "value": "Settings"
+    },
+    {
+      "key": "btn_back",
+      "value": "← Back"
+    },
+    {
+      "key": "btn_continue",
+      "value": "Resume"
+    },
+    {
+      "key": "btn_quit_run",
+      "value": "End Shift"
+    },
+    {
+      "key": "btn_quit_confirm",
+      "value": "Close the shop? This guest counts as a fail (−3 stamina). This shift's stars and progress will end."
+    },
+    {
+      "key": "btn_confirm",
+      "value": "OK"
+    },
+    {
+      "key": "btn_cancel",
+      "value": "Cancel"
+    },
+    {
+      "key": "label_coins",
+      "value": "Coins {0}"
+    },
+    {
+      "key": "label_music",
+      "value": "Music"
+    },
+    {
+      "key": "label_sfx",
+      "value": "Sound"
+    },
+    {
+      "key": "label_haptics",
+      "value": "Vibration"
+    },
+    {
+      "key": "label_language",
+      "value": "Language"
+    },
+    {
+      "key": "lang_zh",
+      "value": "中文"
+    },
+    {
+      "key": "lang_en",
+      "value": "English"
+    },
+    {
+      "key": "toggle_on",
+      "value": "On"
+    },
+    {
+      "key": "toggle_off",
+      "value": "Off"
+    },
+    {
+      "key": "best_served",
+      "value": "Best: {0} customers"
+    },
+    {
+      "key": "daily_recipe",
+      "value": "Today's Recipe"
+    },
+    {
+      "key": "daily_recipe_progress",
+      "value": "{0} progress {1}/{2}"
+    },
+    {
+      "key": "daily_recipe_done",
+      "value": "Done"
+    },
+    {
+      "key": "daily_recipe_locked",
+      "value": " (locked)"
+    },
+    {
+      "key": "daily_recipe_unlock_hint",
+      "value": "Unlock this candy to finish today's challenge"
+    },
+    {
+      "key": "daily_recipe_tap_pending",
+      "value": "Today's Recipe: coming soon"
+    },
+    {
+      "key": "signin_title",
+      "value": "Daily Sign-In"
+    },
+    {
+      "key": "signin_claim",
+      "value": "Claim"
+    },
+    {
+      "key": "signin_close",
+      "value": "Close"
+    },
+    {
+      "key": "signin_streak",
+      "value": "{0}-day streak"
+    },
+    {
+      "key": "signin_coins",
+      "value": "Daily sign-in: +{0} coins"
+    },
+    {
+      "key": "signin_streak_reward",
+      "value": "Streak reward: unlocked recipe {0}"
+    },
+    {
+      "key": "signin_all_recipes",
+      "value": "All recipes unlocked, bonus +{0} coins"
+    },
+    {
+      "key": "ad_extra_50",
+      "value": "Watch ad for +50 coins"
+    },
+    {
+      "key": "recipe_shop_title",
+      "value": "Recipes"
+    },
+    {
+      "key": "recipe_buy",
+      "value": "Buy {0}"
+    },
+    {
+      "key": "recipe_owned",
+      "value": "Unlocked"
+    },
+    {
+      "key": "recipe_new_toast",
+      "value": "New candy in stock: {0}"
+    },
+    {
+      "key": "recipe_featured_tag",
+      "value": "[Today's Recipe]"
+    },
+    {
+      "key": "recipe_sub_normal",
+      "value": "New candy recipe"
+    },
+    {
+      "key": "hud_combo",
+      "value": "Combo x{0}"
+    },
+    {
+      "key": "hud_perfect",
+      "value": "Perfect"
+    },
+    {
+      "key": "hud_star_plus",
+      "value": "Star +1"
+    },
+    {
+      "key": "toast_buried",
+      "value": "Stuck? Use Tornado"
+    },
+    {
+      "key": "game_over_title",
+      "value": "Shop Closed"
+    },
+    {
+      "key": "game_over_served",
+      "value": "Customers served: {0}"
+    },
+    {
+      "key": "game_over_coins",
+      "value": "Coins earned: {0}"
+    },
+    {
+      "key": "game_over_best",
+      "value": "Best {0}"
+    },
+    {
+      "key": "game_over_record",
+      "value": "New record!"
+    },
+    {
+      "key": "game_over_stamina",
+      "value": "Stamina left: {0}"
+    },
+    {
+      "key": "shift_over_title",
+      "value": "Time to rest"
+    },
+    {
+      "key": "shift_over_body",
+      "value": "Out of stamina. See guests tomorrow."
+    },
+    {
+      "key": "btn_main_menu",
+      "value": "Main Menu"
+    },
+    {
+      "key": "ad_revive",
+      "value": "Watch ad to try again"
+    },
+    {
+      "key": "ad_coins_80",
+      "value": "Watch ad for 80 coins"
+    },
+    {
+      "key": "ad_double",
+      "value": "Watch ad to double"
+    },
+    {
+      "key": "ad_buy_need",
+      "value": "Costs coins and an ad"
+    },
+    {
+      "key": "ad_buy_cta",
+      "value": "Buy & watch ad"
+    },
+    {
+      "key": "ad_not_ready",
+      "value": "Ad not ready"
+    },
+    {
+      "key": "ad_refund",
+      "value": "Coins refunded"
+    },
+    {
+      "key": "coins_short",
+      "value": "Not enough coins"
+    },
+    {
+      "key": "powerup_buy_title",
+      "value": "Buy {0} +1"
+    },
+    {
+      "key": "powerup_price",
+      "value": "{0} coins + ad"
+    },
+    {
+      "key": "queue_current",
+      "value": "Current guest"
+    },
+    {
+      "key": "queue_waiting",
+      "value": "Waiting"
+    },
+    {
+      "key": "pause_title",
+      "value": "Paused"
+    },
+    {
+      "key": "pause_quit_hint",
+      "value": "Really close up? Tap \"End Shift\" to confirm"
+    },
+    {
+      "key": "quit_confirm_body",
+      "value": "Close the shop? This guest counts as a fail (−3 stamina). This shift's stars and progress will end."
+    },
+    {
+      "key": "quit_yes",
+      "value": "Close"
+    },
+    {
+      "key": "quit_no",
+      "value": "Keep serving"
+    },
+    {
+      "key": "challenge_chip_done",
+      "value": "Today's Recipe: done"
+    },
+    {
+      "key": "challenge_chip_progress",
+      "value": "Today's Recipe {0}/{1}"
+    },
+    {
+      "key": "challenge_complete_toast",
+      "value": "Daily challenge complete"
+    },
+    {
+      "key": "tutorial_skip",
+      "value": "Skip"
+    },
+    {
+      "key": "tutorial_next",
+      "value": "Next"
+    },
+    {
+      "key": "tutorial_1",
+      "value": "Grab what the guest wants\nby tapping the pile"
+    },
+    {
+      "key": "tutorial_2",
+      "value": "Wrong tap costs a star.\nA perfect serve can restore one (max 3)."
+    },
+    {
+      "key": "tutorial_3",
+      "value": "Use a power-up if you have one.\nRestock costs coins and an ad."
+    },
+    {
+      "key": "stamina_label_frac",
+      "value": "Stamina {0}/{1}"
+    },
+    {
+      "key": "stamina_minus_one",
+      "value": "Stamina −1"
+    },
+    {
+      "key": "hud_stamina_plus",
+      "value": "Stamina +1"
+    },
+    {
+      "key": "hud_stamina_fail",
+      "value": "Stamina −3"
+    },
+    {
+      "key": "stamina_empty_title",
+      "value": "Out of energy"
+    },
+    {
+      "key": "stamina_empty_body",
+      "value": "No stamina left. Come back tomorrow."
+    },
+    {
+      "key": "stamina_shift_title",
+      "value": "Time to rest"
+    },
+    {
+      "key": "stamina_shift_body",
+      "value": "Out of stamina. See guests tomorrow."
+    },
+    {
+      "key": "label_stamina",
+      "value": "Stamina"
+    },
+    {
+      "key": "stamina_frac",
+      "value": "{0}/{1}"
+    },
+    {
+      "key": "powerup_magnet",
+      "value": "Magnet"
+    },
+    {
+      "key": "powerup_tornado",
+      "value": "Tornado"
+    },
+    {
+      "key": "powerup_freeze",
+      "value": "Freeze"
+    }
+  ]
+}

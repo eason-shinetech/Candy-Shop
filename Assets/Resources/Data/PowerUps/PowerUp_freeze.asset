@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   powerUpId: freeze
   displayNameZh: "\u51B0\u51BB"
+  displayNameEn: Freeze
   buyCost: 35
   effectDuration: 5
   vfxPrefab: {fileID: 1395395686848338051, guid: edebe9aa0950de848ad921e867d67b56, type: 3}

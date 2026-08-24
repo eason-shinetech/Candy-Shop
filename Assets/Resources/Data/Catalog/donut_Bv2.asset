@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: donut_Bv2
   displayNameZh: "\u751C\u751C\u5708\u7CD6"
+  displayNameEn: Donut
   prefab: {fileID: 5095056716847881778, guid: 558c2d058f407f04392fd8a742a875a2, type: 3}
   isStarter: 0
   icon: {fileID: 0}

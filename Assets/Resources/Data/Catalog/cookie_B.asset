@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: cookie_B
   displayNameZh: "\u66F2\u5947\u7CD6"
+  displayNameEn: Cookie
   prefab: {fileID: 1322723999244235107, guid: 685b6782a82ac384bb1a8ef8a76206a8, type: 3}
   isStarter: 0
   icon: {fileID: 0}

@@ -93,9 +93,12 @@ namespace CandyShop
                     }
                     break;
                 case "freeze":
-                    orders?.FreezeTimer(game.orderConfig.freezeDurationSeconds);
-                    PlayVfxLoop(def, game.orderConfig.freezeDurationSeconds);
-                    Consume(def);
+                    if (orders != null && !orders.Frozen)
+                    {
+                        orders.FreezeTimer(game.orderConfig.freezeDurationSeconds);
+                        PlayVfxLoop(def, game.orderConfig.freezeDurationSeconds);
+                        Consume(def);
+                    }
                     break;
                 default:
                     Debug.LogError("Unknown power-up id: " + def.powerUpId);
@@ -106,6 +109,7 @@ namespace CandyShop
         private bool TryUseMagnet(PowerUpDefinition def)
         {
             if (orders == null) return false;
+            if (orders.AwaitingServeUi) return false; // serve chip up: keep the charge
             var picks = orders.GetRequiredCandies(Mathf.RoundToInt(game.orderConfig.magnetMaxPicks));
             if (picks.Count == 0) return false; // nothing required: keep the charge
 
@@ -151,7 +155,7 @@ namespace CandyShop
 
         public string GetBuyPriceText(PowerUpDefinition def)
         {
-            return def.buyCost + " 金币 + 看广告";
+            return string.Format(I18nService.Get("powerup_price"), def.buyCost);
         }
 
         public bool CanAfford(PowerUpDefinition def) => EconomyManager.Coins >= def.buyCost;
@@ -182,12 +186,12 @@ namespace CandyShop
             var ads = AdServiceLocator.Service;
             if (ads == null || !ads.IsReady(BuyPlacement(def)))
             {
-                messageOut?.Invoke("广告还没准备好");
+                messageOut?.Invoke(I18nService.Get("ad_not_ready"));
                 return;
             }
             if (!EconomyManager.TrySpend(def.buyCost))
             {
-                messageOut?.Invoke("金币不足");
+                messageOut?.Invoke(I18nService.Get("coins_short"));
                 return;
             }
 
@@ -202,7 +206,7 @@ namespace CandyShop
                 else
                 {
                     EconomyManager.AddCoins(def.buyCost); // refund coins
-                    messageOut?.Invoke("已退还金币");
+                    messageOut?.Invoke(I18nService.Get("ad_refund"));
                 }
             });
         }
@@ -213,12 +217,12 @@ namespace CandyShop
             var ads = AdServiceLocator.Service;
             if (ads == null || !ads.IsReady(BuyPlacement(def)))
             {
-                messageOut?.Invoke("广告还没准备好");
+                messageOut?.Invoke(I18nService.Get("ad_not_ready"));
                 return;
             }
             if (!EconomyManager.TrySpend(def.buyCost))
             {
-                messageOut?.Invoke("金币不足");
+                messageOut?.Invoke(I18nService.Get("coins_short"));
                 return;
             }
             ads.ShowRewarded(BuyPlacement(def), ok =>
@@ -231,7 +235,7 @@ namespace CandyShop
                 else
                 {
                     EconomyManager.AddCoins(def.buyCost);
-                    messageOut?.Invoke("已退还金币");
+                    messageOut?.Invoke(I18nService.Get("ad_refund"));
                 }
             });
         }
@@ -249,6 +253,8 @@ namespace CandyShop
         public void CancelEffects()
         {
             StopAllCoroutines();
+            // StopAfter coroutines are dead now — stop any looping VFX directly.
+            if (vfx != null) vfx.StopAllLoops();
         }
     }
 

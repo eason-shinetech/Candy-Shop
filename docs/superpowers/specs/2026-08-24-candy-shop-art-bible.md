@@ -76,6 +76,7 @@ Always prepend the **style lock**. Then append the line in the Prompt column.
 | `Assets/Art/UI/icon_star.png` | Glossy lemon candy star, sparkle |
 | `Assets/Art/UI/icon_coin.png` | Round gold-lemon candy coin, star stamp, cute |
 | `Assets/Art/UI/icon_pause.png` | Two rounded candy sticks as pause bars, pink |
+| `Assets/Art/UI/icon_stamina.png` | Glossy sugar-pink heart candy (体力), frosting highlight, cute, not a realistic anatomical heart |
 | `Assets/Art/UI/bar_timer_bg.png` | Horizontal rounded bar empty, cream |
 | `Assets/Art/UI/bar_timer_fill.png` | Horizontal rounded bar fill, lemon to mint gradient |
 | `Assets/Art/UI/popup_signin.png` | Gift box of candies, pastel, cute, no text |

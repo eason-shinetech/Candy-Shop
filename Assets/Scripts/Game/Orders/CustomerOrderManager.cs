@@ -20,6 +20,7 @@ namespace CandyShop
 
         public bool TimerRunning { get; private set; }
         public bool Frozen { get; private set; }
+        public bool AwaitingServeUi => _awaitingServeUi;
         private float _frozenUntil = -1f;
 
         public event Action<CustomerOrderState> OrderStarted;
@@ -28,7 +29,7 @@ namespace CandyShop
         public event Action<CandyTypeDefinition> CorrectPick;
         public event Action WrongPick;
         public event Action<string> ServeCompletedRewardText; // "+N"
-        public event Action<bool> ServePerfectStamp;          // true = show 完美
+        public event Action<bool> ServePerfectStamp;          // true = show the perfect stamp
         public event Action BuriedHintRequested;
 
         private float _secondsSinceCorrectPick;
@@ -42,6 +43,12 @@ namespace CandyShop
 
         public void BeginQueue()
         {
+            // The first guest of a run becomes current here; this start spends 1 stamina.
+            if (!StaminaService.SpendForCurrentGuest())
+            {
+                game.EndRun("aborted"); // should not happen: menu gates at stamina < 1
+                return;
+            }
             Current = GenerateOrder();
             _waiting.Clear();
             for (int i = 0; i < (game.orderConfig.waitingCount); i++)
@@ -109,10 +116,21 @@ namespace CandyShop
             if (chosen.Count == 0 && unlocked.Count > 0) chosen.Add(unlocked[0]);
 
             int total = UnityEngine.Random.Range(cfg.minTotal, cfg.maxTotal + 1);
-            // Mild difficulty scaling: after every N served customers bias toward the upper half.
-            if (_servedCountForScaling > 0 && _servedCountForScaling % cfg.scaleEveryCustomers == 0)
+            // Mild difficulty scaling: once past each N-served milestone, bias toward the upper half.
+            if (_servedCountForScaling >= cfg.scaleEveryCustomers &&
+                UnityEngine.Random.value < 0.5f)
                 total = UnityEngine.Random.Range((cfg.minTotal + cfg.maxTotal) / 2, cfg.maxTotal + 1);
             total = Mathf.Min(total, cfg.maxTotal);
+
+            if (chosen.Count == 0)
+            {
+                // No unlocked types (empty catalog / bad data): fail safe with a minimal order
+                // instead of indexing into an empty list.
+                var empty = new CustomerOrderState { totalCandies = 0 };
+                empty.totalTime = Mathf.Clamp(cfg.baseSeconds, cfg.minSeconds, cfg.maxSeconds);
+                empty.timeLeft = empty.totalTime;
+                return empty;
+            }
 
             var order = new CustomerOrderState { totalCandies = total };
             foreach (var t in chosen)
@@ -233,6 +251,14 @@ namespace CandyShop
         {
             if (Current == null) return;
             _awaitingServeUi = false;
+
+            // Stamina gate (spec 8.2): the next guest becomes current only if we can pay.
+            // Otherwise the shift is over — no revive, no fail penalty.
+            if (!StaminaService.SpendForCurrentGuest())
+            {
+                game.EndRun("shift_over");
+                return;
+            }
 
             Current = _waiting.Count > 0 ? ShiftQueue() : GenerateOrder();
             while (_waiting.Count < game.orderConfig.waitingCount)

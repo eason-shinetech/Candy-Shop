@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: cupcake_A
   displayNameZh: "\u676F\u5B50\u86CB\u7CD5\u7CD6"
+  displayNameEn: Cupcake
   prefab: {fileID: 4361865250181420902, guid: 71e845702c0fa024c9ce224729384517, type: 3}
   isStarter: 0
   icon: {fileID: 0}

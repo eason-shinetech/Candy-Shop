@@ -12,7 +12,7 @@ Kids and casual players on **Android**, portrait phone. One-hand thumb reach. UI
 
 ## Product lane
 
-Cute candy shop management: tap a 3D pile to fill customer orders. Fast, readable, sweet. Feels like a toy bakery, not a fintech dashboard.
+Cute candy shop management: tap a 3D pile to fill customer orders. Fast, readable, sweet. Feels like a toy bakery, not a fintech dashboard. Daily **stamina** (20) caps how long you can keep the shop open.
 
 ## Voice
 

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: popsicle_3
   displayNameZh: "\u96EA\u7CD5\u7CD6"
+  displayNameEn: Ice Pop
   prefab: {fileID: 221695615187615791, guid: 73acfb6ab4e4a384ba78711b6e34bb91, type: 3}
   isStarter: 0
   icon: {fileID: 0}

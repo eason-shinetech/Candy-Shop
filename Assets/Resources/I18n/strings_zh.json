@@ -1,0 +1,376 @@
+{
+  "entries": [
+    {
+      "key": "app_title",
+      "value": "糖果店"
+    },
+    {
+      "key": "menu_subtitle",
+      "value": "欢迎光临～今天也想快点打烊吗？"
+    },
+    {
+      "key": "menu_first_day",
+      "value": "开始你的第一天营业吧！"
+    },
+    {
+      "key": "btn_start",
+      "value": "开始营业"
+    },
+    {
+      "key": "btn_recipes",
+      "value": "配方商店"
+    },
+    {
+      "key": "btn_settings",
+      "value": "设置"
+    },
+    {
+      "key": "btn_back",
+      "value": "← 返回"
+    },
+    {
+      "key": "btn_continue",
+      "value": "继续"
+    },
+    {
+      "key": "btn_quit_run",
+      "value": "放弃本局"
+    },
+    {
+      "key": "btn_quit_confirm",
+      "value": "真的要打烊吗？当前客人会失败（体力-3），本局星星和进度会结束"
+    },
+    {
+      "key": "btn_confirm",
+      "value": "确定"
+    },
+    {
+      "key": "btn_cancel",
+      "value": "取消"
+    },
+    {
+      "key": "label_coins",
+      "value": "金币 {0}"
+    },
+    {
+      "key": "label_music",
+      "value": "音乐"
+    },
+    {
+      "key": "label_sfx",
+      "value": "音效"
+    },
+    {
+      "key": "label_haptics",
+      "value": "振动"
+    },
+    {
+      "key": "label_language",
+      "value": "语言"
+    },
+    {
+      "key": "lang_zh",
+      "value": "中文"
+    },
+    {
+      "key": "lang_en",
+      "value": "English"
+    },
+    {
+      "key": "toggle_on",
+      "value": "开"
+    },
+    {
+      "key": "toggle_off",
+      "value": "关"
+    },
+    {
+      "key": "best_served",
+      "value": "历史最佳：服务 {0} 位客人"
+    },
+    {
+      "key": "daily_recipe",
+      "value": "今日配方"
+    },
+    {
+      "key": "daily_recipe_progress",
+      "value": "{0} 进度 {1}/{2}"
+    },
+    {
+      "key": "daily_recipe_done",
+      "value": "已完成"
+    },
+    {
+      "key": "daily_recipe_locked",
+      "value": "（未解锁）"
+    },
+    {
+      "key": "daily_recipe_unlock_hint",
+      "value": "解锁后才能完成今日挑战"
+    },
+    {
+      "key": "daily_recipe_tap_pending",
+      "value": "今日配方：敬请期待"
+    },
+    {
+      "key": "signin_title",
+      "value": "每日签到"
+    },
+    {
+      "key": "signin_claim",
+      "value": "领取"
+    },
+    {
+      "key": "signin_close",
+      "value": "关闭"
+    },
+    {
+      "key": "signin_streak",
+      "value": "已连续签到 {0} 天"
+    },
+    {
+      "key": "signin_coins",
+      "value": "每日签到 +{0} 金币"
+    },
+    {
+      "key": "signin_streak_reward",
+      "value": "连续签到奖励：解锁新配方 {0}"
+    },
+    {
+      "key": "signin_all_recipes",
+      "value": "全部配方已解锁，奖励 +{0} 金币"
+    },
+    {
+      "key": "ad_extra_50",
+      "value": "看广告再领 50 金币"
+    },
+    {
+      "key": "recipe_shop_title",
+      "value": "配方商店"
+    },
+    {
+      "key": "recipe_buy",
+      "value": "购买 {0}"
+    },
+    {
+      "key": "recipe_owned",
+      "value": "已解锁"
+    },
+    {
+      "key": "recipe_new_toast",
+      "value": "新糖果上架：{0}"
+    },
+    {
+      "key": "recipe_featured_tag",
+      "value": "[今日配方]"
+    },
+    {
+      "key": "recipe_sub_normal",
+      "value": "新糖果配方"
+    },
+    {
+      "key": "hud_combo",
+      "value": "连击 x{0}"
+    },
+    {
+      "key": "hud_perfect",
+      "value": "完美"
+    },
+    {
+      "key": "hud_star_plus",
+      "value": "星星+1"
+    },
+    {
+      "key": "toast_buried",
+      "value": "找不到？用龙卷风翻一翻"
+    },
+    {
+      "key": "game_over_title",
+      "value": "营业结束"
+    },
+    {
+      "key": "game_over_served",
+      "value": "本局服务 {0} 位"
+    },
+    {
+      "key": "game_over_coins",
+      "value": "赚到 {0} 金币"
+    },
+    {
+      "key": "game_over_best",
+      "value": "历史最佳 {0}"
+    },
+    {
+      "key": "game_over_record",
+      "value": "新纪录!"
+    },
+    {
+      "key": "game_over_stamina",
+      "value": "剩余体力 {0}"
+    },
+    {
+      "key": "shift_over_title",
+      "value": "打烊休息"
+    },
+    {
+      "key": "shift_over_body",
+      "value": "体力用完了，明天再接待客人"
+    },
+    {
+      "key": "btn_main_menu",
+      "value": "回到主菜单"
+    },
+    {
+      "key": "ad_revive",
+      "value": "看广告再试一次"
+    },
+    {
+      "key": "ad_coins_80",
+      "value": "看广告获得 80 金币"
+    },
+    {
+      "key": "ad_double",
+      "value": "看广告翻倍"
+    },
+    {
+      "key": "ad_buy_need",
+      "value": "购买需扣金币并看广告"
+    },
+    {
+      "key": "ad_buy_cta",
+      "value": "购买并观看广告"
+    },
+    {
+      "key": "ad_not_ready",
+      "value": "广告还没准备好"
+    },
+    {
+      "key": "ad_refund",
+      "value": "已退还金币"
+    },
+    {
+      "key": "coins_short",
+      "value": "金币不足"
+    },
+    {
+      "key": "powerup_buy_title",
+      "value": "购买 {0} +1"
+    },
+    {
+      "key": "powerup_price",
+      "value": "{0} 金币 + 看广告"
+    },
+    {
+      "key": "queue_current",
+      "value": "当前客人"
+    },
+    {
+      "key": "queue_waiting",
+      "value": "排队中"
+    },
+    {
+      "key": "pause_title",
+      "value": "暂停"
+    },
+    {
+      "key": "pause_quit_hint",
+      "value": "真的要打烊吗？点「放弃本局」确认"
+    },
+    {
+      "key": "quit_confirm_body",
+      "value": "真的要打烊吗？当前客人会失败（体力-3），本局星星和进度会结束"
+    },
+    {
+      "key": "quit_yes",
+      "value": "打烊"
+    },
+    {
+      "key": "quit_no",
+      "value": "继续营业"
+    },
+    {
+      "key": "challenge_chip_done",
+      "value": "今日配方：已完成"
+    },
+    {
+      "key": "challenge_chip_progress",
+      "value": "今日配方 进度 {0}/{1}"
+    },
+    {
+      "key": "challenge_complete_toast",
+      "value": "今日挑战完成"
+    },
+    {
+      "key": "tutorial_skip",
+      "value": "跳过"
+    },
+    {
+      "key": "tutorial_next",
+      "value": "下一步"
+    },
+    {
+      "key": "tutorial_1",
+      "value": "客人要的糖，\n点堆里的就可以"
+    },
+    {
+      "key": "tutorial_2",
+      "value": "点错会扣星星；\n完美接待可以补回一颗（最多三颗）"
+    },
+    {
+      "key": "tutorial_3",
+      "value": "道具有库存就能用；\n没了要花金币并看广告补充"
+    },
+    {
+      "key": "stamina_label_frac",
+      "value": "体力 {0}/{1}"
+    },
+    {
+      "key": "stamina_minus_one",
+      "value": "体力-1"
+    },
+    {
+      "key": "hud_stamina_plus",
+      "value": "体力+1"
+    },
+    {
+      "key": "hud_stamina_fail",
+      "value": "体力-3"
+    },
+    {
+      "key": "stamina_empty_title",
+      "value": "今天累了"
+    },
+    {
+      "key": "stamina_empty_body",
+      "value": "体力用完了，明天再来营业吧"
+    },
+    {
+      "key": "stamina_shift_title",
+      "value": "打烊休息"
+    },
+    {
+      "key": "stamina_shift_body",
+      "value": "体力用完了，明天再接待客人"
+    },
+    {
+      "key": "label_stamina",
+      "value": "体力"
+    },
+    {
+      "key": "stamina_frac",
+      "value": "{0}/{1}"
+    },
+    {
+      "key": "powerup_magnet",
+      "value": "磁铁"
+    },
+    {
+      "key": "powerup_tornado",
+      "value": "龙卷风"
+    },
+    {
+      "key": "powerup_freeze",
+      "value": "冰冻"
+    }
+  ]
+}

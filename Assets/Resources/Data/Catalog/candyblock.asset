@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: candyblock
   displayNameZh: "\u7CD6\u679C"
+  displayNameEn: Candy
   prefab: {fileID: 3017993757041723902, guid: b1d9cf60016194b42b4132b922c88107, type: 3}
   isStarter: 0
   icon: {fileID: 0}

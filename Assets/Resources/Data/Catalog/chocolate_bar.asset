@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: chocolate_bar
   displayNameZh: "\u5DE7\u514B\u529B"
+  displayNameEn: Chocolate
   prefab: {fileID: 5241796159686722111, guid: c85419d55598e0247a895f509c292085, type: 3}
   isStarter: 1
   icon: {fileID: 0}

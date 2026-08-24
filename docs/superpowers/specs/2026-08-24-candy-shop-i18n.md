@@ -44,7 +44,7 @@ Keys are stable. If a screen needs a new sentence, add a key to **both** files.
 | `btn_back` | 返回 | Back |
 | `btn_continue` | 继续 | Resume |
 | `btn_quit_run` | 放弃本局 | End Shift |
-| `btn_quit_confirm` | 真的要打烊吗？本局星星和进度会结束 | Close the shop? This shift’s stars and progress will end. |
+| `btn_quit_confirm` | 真的要打烊吗？当前客人会失败（体力-3），本局星星和进度会结束 | Close the shop? This guest counts as a fail (−3 stamina). This shift’s stars and progress will end. |
 | `btn_confirm` | 确定 | OK |
 | `btn_cancel` | 取消 | Cancel |
 | `label_music` | 音乐 | Music |
@@ -94,6 +94,16 @@ Keys are stable. If a screen needs a new sentence, add a key to **both** files.
 | `tutorial_2` | 点错会扣星星；完美接待可以补回一颗（最多三颗） | Wrong tap costs a star. A perfect serve can restore one (max 3). |
 | `tutorial_3` | 道具有库存就能用；没了要花金币并看广告补充 | Use a power-up if you have one. Restock costs coins and an ad. |
 | `pause_title` | 暂停 | Paused |
+| `label_stamina` | 体力 | Stamina |
+| `stamina_frac` | {0}/{1} | {0}/{1} |
+| `stamina_minus_one` | 体力-1 | Stamina −1 |
+| `hud_stamina_plus` | 体力+1 | Stamina +1 |
+| `hud_stamina_fail` | 体力-3 | Stamina −3 |
+| `stamina_empty_title` | 今天累了 | Out of energy |
+| `stamina_empty_body` | 体力用完了，明天再来营业吧 | No stamina left. Come back tomorrow. |
+| `stamina_shift_title` | 打烊休息 | Time to rest |
+| `stamina_shift_body` | 体力用完了，明天再接待客人 | Out of stamina. See guests tomorrow. |
+| `game_over_stamina` | 剩余体力 {0} | Stamina left: {0} |
 
 Candy mesh display names: add `name_zh` / `name_en` in `docs/generated/candy-catalog.md` when the kit is enumerated. Do not leave FBX names in the HUD.
 
@@ -104,4 +114,4 @@ Candy mesh display names: add `name_zh` / `name_en` in `docs/generated/candy-cat
 - Create `Assets/Scripts/I18n/I18nService.cs` and the two JSON files with **every** key above.
 - Settings language toggle on Main Menu and Pause.
 - After `SetLanguage`, refresh all open screens.
-- QA: flip zh ↔ en on menu, HUD, shop, tutorial strings, ads sheets, game over.
+- QA: flip zh ↔ en on menu, HUD, shop, tutorial strings, ads sheets, game over, stamina empty / Shift Over.

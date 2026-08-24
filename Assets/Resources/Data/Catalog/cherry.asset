@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: cherry
   displayNameZh: "\u6A31\u6843\u7CD6"
+  displayNameEn: Cherry
   prefab: {fileID: 8287037544529505233, guid: 4d8f1ba3a6578474e8cf7b55e03bf110, type: 3}
   isStarter: 0
   icon: {fileID: 0}

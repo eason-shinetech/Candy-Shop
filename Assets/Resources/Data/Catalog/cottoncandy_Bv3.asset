@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: cottoncandy_Bv3
   displayNameZh: "\u68C9\u82B1\u7CD6"
+  displayNameEn: Cotton Candy
   prefab: {fileID: 4300170234416151627, guid: 8919da5b6af07c84084854df11c98c99, type: 3}
   isStarter: 0
   icon: {fileID: 0}

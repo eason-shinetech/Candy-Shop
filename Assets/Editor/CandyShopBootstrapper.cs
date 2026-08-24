@@ -126,6 +126,7 @@ namespace CandyShop.EditorTools
             public string meshName;
             public string typeId;
             public string nameZh;
+            public string nameEn;
             public bool isStarter;
             public int cost; // -1 for starters
             public GameObject prefab;
@@ -156,6 +157,32 @@ namespace CandyShop.EditorTools
             "sign", "stick",
             "melted_icecream", "melted_icecreamv2", "melted_icecreamv3"
         };
+
+        // English display names per family (i18n spec: names follow the active locale).
+        private static readonly Dictionary<string, string> EnMap = new Dictionary<string, string>
+        {
+            { "lollipop", "Lollipop" }, { "popsicle", "Ice Pop" }, { "cane", "Candy Cane" },
+            { "gummy", "Gummy" }, { "jelly", "Jelly" }, { "chocolate", "Chocolate" },
+            { "wafer", "Wafer" }, { "waffer", "Wafer" }, { "waffle", "Waffle" },
+            { "balloon", "Balloon Gummy" }, { "donut", "Donut" }, { "macaron", "Macaron" },
+            { "cupcake", "Cupcake" }, { "cake", "Cake" }, { "cookie", "Cookie" },
+            { "cottoncandy", "Cotton Candy" }, { "marshmallow", "Marshmallow" }, { "mint", "Mint" },
+            { "candy", "Candy" }, { "star", "Star Candy" }, { "heart", "Heart Candy" },
+            { "bean", "Candy Bean" }, { "ring", "Ring Candy" }, { "swirl", "Swirl Candy" },
+            { "strawberry", "Strawberry" }, { "cherry", "Cherry" }, { "berry", "Berry" },
+            { "fruit", "Fruit Candy" }, { "icecream", "Ice Cream" }, { "icecreamcone", "Cone" },
+            { "milkshake", "Milkshake" }, { "mm_", "Choco Bean" }, { "pretzel", "Pretzel" },
+            { "swiss_roll", "Swiss Roll" }, { "sweet_bread", "Sweet Bread" }, { "sandwich", "Sandwich" }
+        };
+
+        private static string ToEn(string meshName, int fallbackIndex)
+        {
+            var lower = meshName.ToLowerInvariant();
+            foreach (var kvp in EnMap)
+                if (lower.Contains(kvp.Key))
+                    return kvp.Value;
+            return "Candy " + (fallbackIndex + 1);
+        }
 
         private static string ToZh(string meshName, int fallbackIndex)
         {
@@ -247,6 +274,7 @@ namespace CandyShop.EditorTools
                     meshName = meshName,
                     typeId = typeId,
                     nameZh = ToZh(meshName, zhIndex),
+                    nameEn = ToEn(meshName, zhIndex),
                     isStarter = isStarter,
                     cost = isStarter ? -1 : 120 + recipeIndex * 60,
                     prefab = prefab
@@ -255,6 +283,7 @@ namespace CandyShop.EditorTools
                 var def = ScriptableObject.CreateInstance<CandyTypeDefinition>();
                 def.typeId = entry.typeId;
                 def.displayNameZh = entry.nameZh;
+                def.displayNameEn = entry.nameEn;
                 def.prefab = prefab;
                 def.isStarter = isStarter;
                 def.chipColor = palette[entries.Count % palette.Length];
@@ -308,13 +337,13 @@ namespace CandyShop.EditorTools
             var tornadoVfx = CreateVfx("Vfx_Tornado", UIKit.Wind, true, ParticleSystemShapeType.Donut);
             var freezeVfx = CreateVfx("Vfx_Freeze", UIKit.Ice, true, ParticleSystemShapeType.Hemisphere);
 
-            CreatePowerUpDef("magnet", "磁铁", 50, 0f, magnetVfx, UIKit.MagnetRed);
-            CreatePowerUpDef("tornado", "龙卷风", 40, 4f, tornadoVfx, new Color(0.55f, 0.85f, 0.65f));
-            CreatePowerUpDef("freeze", "冰冻", 35, 5f, freezeVfx, UIKit.Ice);
+            CreatePowerUpDef("magnet", "磁铁", 50, 0f, magnetVfx, UIKit.MagnetRed, "Magnet");
+            CreatePowerUpDef("tornado", "龙卷风", 40, 4f, tornadoVfx, new Color(0.55f, 0.85f, 0.65f), "Tornado");
+            CreatePowerUpDef("freeze", "冰冻", 35, 5f, freezeVfx, UIKit.Ice, "Freeze");
             AssetDatabase.SaveAssets();
         }
 
-        private static void CreatePowerUpDef(string id, string zh, int cost, float duration, GameObject vfx, Color accent)
+        private static void CreatePowerUpDef(string id, string zh, int cost, float duration, GameObject vfx, Color accent, string en = null)
         {
             var path = $"{PowerUpsDir}/PowerUp_{id}.asset";
             var def = AssetDatabase.LoadAssetAtPath<PowerUpDefinition>(path);
@@ -325,6 +354,7 @@ namespace CandyShop.EditorTools
             }
             def.powerUpId = id;
             def.displayNameZh = zh;
+            def.displayNameEn = en ?? id;
             def.buyCost = cost;
             def.effectDuration = duration;
             def.vfxPrefab = vfx;
@@ -409,6 +439,11 @@ namespace CandyShop.EditorTools
             {
                 c.quota = 12; c.biasChance = 0.7f; c.lockedDiscount = 0.2f;
                 c.rewardCoins = 120; c.rewardFreezeCount = 1;
+            });
+            CreateConfig<StaminaConfig>("StaminaConfig", c =>
+            {
+                c.dailyMax = 20; c.costPerCustomer = 1;
+                c.perfectRefund = 1; c.passDelta = 0; c.failPenalty = 3;
             });
             AssetDatabase.SaveAssets();
         }

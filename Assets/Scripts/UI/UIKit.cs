@@ -4,8 +4,7 @@ using UnityEngine.UI;
 
 namespace CandyShop
 {
-    // Shared UI helpers: art-bible palette, rounded cookie-like panels and simple widgets.
-    // Art PNGs are optional in MVP; everything is tinted from the same palette so the kit stays coherent.
+    // Shared UI helpers: art-bible palette, cartoon sprites from Resources/UI, rounded widgets.
     public static class UIKit
     {
         // Palette (design spec section 2.1)
@@ -57,7 +56,7 @@ namespace CandyShop
             var scaler = root.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1080, 1920);
-            scaler.matchWidthOrHeight = 0f; // match width keeps thumb-zone buttons reachable on tall phones
+            scaler.matchWidthOrHeight = 1f; // spec section 2: reference 1080x1920, match height
             return canvas;
         }
 
@@ -65,6 +64,83 @@ namespace CandyShop
 
         private static Texture2D _roundedTex;
         private static Sprite _roundedSprite;
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> _spriteCache =
+            new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        // Loads a PNG from Assets/Resources/UI (Texture2D -> Sprite). Missing files fall back to the rounded cookie.
+        public static Sprite LoadSprite(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath)) return RoundedSprite();
+            Sprite cached;
+            if (_spriteCache.TryGetValue(relativePath, out cached) && cached != null) return cached;
+            var spriteAsset = Resources.Load<Sprite>("UI/" + relativePath);
+            if (spriteAsset != null)
+            {
+                _spriteCache[relativePath] = spriteAsset;
+                return spriteAsset;
+            }
+            var tex = Resources.Load<Texture2D>("UI/" + relativePath);
+            if (tex == null) return RoundedSprite();
+            tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+            _spriteCache[relativePath] = sprite;
+            return sprite;
+        }
+
+        public static Image CreateIcon(Transform parent, string resourcePath, Vector2 size)
+        {
+            var go = new GameObject("Icon_" + resourcePath.Replace('/', '_'), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var img = go.GetComponent<Image>();
+            img.sprite = LoadSprite(resourcePath);
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            img.color = Color.white;
+            var rt = (RectTransform)go.transform;
+            rt.sizeDelta = size;
+            return img;
+        }
+
+        public static Image CreateBackground(Transform canvasRoot, string resourcePath)
+        {
+            var go = new GameObject("ArtBackground", typeof(Image));
+            go.transform.SetParent(canvasRoot, false);
+            go.transform.SetAsFirstSibling();
+            var img = go.GetComponent<Image>();
+            img.sprite = LoadSprite(resourcePath);
+            img.preserveAspect = false;
+            img.raycastTarget = false;
+            img.color = Color.white;
+            Stretch((RectTransform)go.transform, canvasRoot);
+            return img;
+        }
+
+        // Map a catalog CandyTypeId to a family icon under Resources/UI/Candies.
+        public static string CandyIconPath(string typeId)
+        {
+            if (string.IsNullOrEmpty(typeId)) return "Candies/icon_candy_candy";
+            var id = typeId.ToLowerInvariant();
+            if (id.StartsWith("balloon")) return "Candies/icon_candy_balloon";
+            if (id.StartsWith("cake") || id.StartsWith("swiss")) return "Candies/icon_candy_cake";
+            if (id.StartsWith("chocolate")) return "Candies/icon_candy_chocolate";
+            if (id.StartsWith("cookie") || id.StartsWith("sweet_bread")) return "Candies/icon_candy_cookie";
+            if (id.StartsWith("cotton")) return "Candies/icon_candy_cottoncandy";
+            if (id.StartsWith("cupcake")) return "Candies/icon_candy_cupcake";
+            if (id.StartsWith("donut") || id.StartsWith("sweet_ring")) return "Candies/icon_candy_donut";
+            if (id.StartsWith("icecream")) return "Candies/icon_candy_icecream";
+            if (id.StartsWith("jelly")) return "Candies/icon_candy_jelly";
+            if (id.StartsWith("lollipop")) return "Candies/icon_candy_lollipop";
+            if (id.StartsWith("milkshake")) return "Candies/icon_candy_milkshake";
+            if (id.StartsWith("mm")) return "Candies/icon_candy_mm";
+            if (id.StartsWith("popsicle")) return "Candies/icon_candy_popsicle";
+            if (id.StartsWith("pretzel")) return "Candies/icon_candy_pretzel";
+            if (id.StartsWith("straw") || id.StartsWith("cherry") || id.Contains("strawberry"))
+                return "Candies/icon_candy_strawberry";
+            if (id.StartsWith("waffle")) return "Candies/icon_candy_waffle";
+            if (id.StartsWith("waffer")) return "Candies/icon_candy_waffer";
+            return "Candies/icon_candy_candy";
+        }
 
         public static Sprite RoundedSprite()
         {

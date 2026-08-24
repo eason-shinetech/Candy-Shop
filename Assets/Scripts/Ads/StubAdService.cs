@@ -87,9 +87,17 @@ namespace CandyShop
                 placement == AdPlacement.reward_powerup_buy_freeze;
 
             // Simulate the ad with a fixed delay so flows can be tested without a network.
+            // Spec 14: the customer timer must not run while a rewarded ad shows.
             var host = new GameObject("StubAdHost");
             UnityEngine.Object.DontDestroyOnLoad(host);
             var runner = host.AddComponent<StubAdRunner>();
+            var game = GameManager.Instance;
+            bool pausedRun = false;
+            if (game != null && game.RunActive && !game.Paused && isRewardedInRun(placement))
+            {
+                game.SetPaused(true);
+                pausedRun = true;
+            }
             runner.StartCoroutine(RunAd(host, () =>
             {
                 RefreshDateCounters();
@@ -101,7 +109,18 @@ namespace CandyShop
                     if (placement == AdPlacement.reward_coins) _coinAdsToday++;
                     SaveDataService.Save();
                 }
+                if (pausedRun && game != null) game.SetPaused(false);
             }, onRewarded));
+        }
+
+        // In-run rewarded placements that should freeze the customer timer.
+        private static bool isRewardedInRun(AdPlacement placement)
+        {
+            return placement == AdPlacement.reward_coins ||
+                   placement == AdPlacement.reward_double_serve ||
+                   placement == AdPlacement.reward_powerup_buy_magnet ||
+                   placement == AdPlacement.reward_powerup_buy_tornado ||
+                   placement == AdPlacement.reward_powerup_buy_freeze;
         }
 
         private IEnumerator RunAd(GameObject host, Action onComplete, Action<bool> onRewarded)

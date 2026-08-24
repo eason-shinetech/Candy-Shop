@@ -49,7 +49,12 @@ namespace CandyShop
             try
             {
                 var json = JsonUtility.ToJson(Current);
-                File.WriteAllText(SavePath, json);
+                // Atomic write: temp file then replace so process death mid-write
+                // cannot corrupt the only save blob.
+                var tmp = SavePath + ".tmp";
+                File.WriteAllText(tmp, json);
+                if (File.Exists(SavePath)) File.Replace(tmp, SavePath, null);
+                else File.Move(tmp, SavePath);
             }
             catch (Exception e)
             {

@@ -16,6 +16,7 @@ namespace CandyShop
         public PowerUpDefinition magnetDef;
         public PowerUpDefinition tornadoDef;
         public PowerUpDefinition freezeDef;
+        public StaminaConfig staminaConfig;
 
         [Header("Data")]
         public CandyTypeDefinition[] catalog;
@@ -34,7 +35,7 @@ namespace CandyShop
         public bool AllowOptionalAds => SaveDataService.Current.bestCustomersServed > 0;
 
         public event Action<int> StarsChanged;
-        public event Action<string> RunEnded; // reason: "stars" | "timeout" | "quit"
+        public event Action<string> RunEnded; // reason: "stars" | "timeout" | "quit" | "shift_over"
         public event Action<bool> PauseChanged;
 
         private CustomerOrderManager _orders;
@@ -55,6 +56,7 @@ namespace CandyShop
             if (economyConfig == null) economyConfig = Resources.Load<EconomyConfig>("Data/EconomyConfig");
             if (adConfig == null) adConfig = Resources.Load<AdConfig>("Data/AdConfig");
             if (dailyChallengeConfig == null) dailyChallengeConfig = Resources.Load<DailyChallengeConfig>("Data/DailyChallengeConfig");
+            if (staminaConfig == null) staminaConfig = Resources.Load<StaminaConfig>("Data/StaminaConfig");
             if (magnetDef == null) magnetDef = Resources.Load<PowerUpDefinition>("Data/PowerUps/PowerUp_magnet");
             if (tornadoDef == null) tornadoDef = Resources.Load<PowerUpDefinition>("Data/PowerUps/PowerUp_tornado");
             if (freezeDef == null) freezeDef = Resources.Load<PowerUpDefinition>("Data/PowerUps/PowerUp_freeze");
@@ -89,6 +91,12 @@ namespace CandyShop
             if (_orders != null) _orders.BeginQueue();
         }
 
+        // Confirmed fail (Game Over left without revive, or quit confirm): stamina -3.
+        public void ConfirmFailPenalty()
+        {
+            StaminaService.ApplyFailPenalty();
+        }
+
         public void NotifyCorrectPick(string typeId)
         {
             DailySignInService.ReportCorrectPick(SaveDataService.Current, typeId, dailyChallengeConfig);
@@ -115,6 +123,10 @@ namespace CandyShop
                 Stars = Mathf.Min(3, Stars + 1);
                 StarsChanged?.Invoke(Stars);
             }
+
+            // Stamina settle (spec 8.2): perfect +1 / pass +0.
+            if (perfect) StaminaService.SettlePerfect();
+            else StaminaService.SettlePass();
         }
 
         public void OnTimerExpired() => EndRun("timeout");
@@ -152,8 +164,12 @@ namespace CandyShop
 
         public void EndRun(string reason)
         {
-            if (!RunActive && reason != "quit") return;
+            // Quit is allowed even when the run already ended (pause after game-over),
+            // but must not re-fire RunEnded.
+            bool alreadyEnded = !RunActive;
+            if (alreadyEnded && reason != "quit") return;
             RunActive = false;
+            if (alreadyEnded) return;
 
             var save = SaveDataService.Current;
             if (reason != "aborted")
@@ -166,9 +182,11 @@ namespace CandyShop
             RunEnded?.Invoke(reason);
         }
 
-        // Called by the HUD after the Game Over popup was dismissed with 回到主菜单.
+        // Called by the HUD after the player dismisses Game Over with the main-menu button.
         public void ReturnToMenu()
         {
+            // Refresh stamina on menu re-entry so a new local date refills (spec 8.2).
+            StaminaService.RefreshOnDateRoll();
             UnityEngine.SceneManagement.SceneManager.LoadScene(SceneNames.MainMenu);
         }
     }

@@ -29,5 +29,13 @@ namespace CandyShop
         public string dailyChallengeYesterdayId = "";
         public int dailyChallengeProgress = 0;
         public bool dailyChallengeClaimed = false;
+
+        // Daily stamina (spec 8.2). Missing staminaDate on an old save is treated
+        // as a new date by StaminaService and refreshed to dailyMax.
+        public int stamina = 20;
+        public string staminaDate = "";
+
+        // Active locale: "zh" or "en" (i18n spec section 1).
+        public string language = "";
     }
 }

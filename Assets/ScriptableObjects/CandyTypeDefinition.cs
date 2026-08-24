@@ -9,6 +9,11 @@ namespace CandyShop
         [Header("Identity")]
         public string typeId;
         public string displayNameZh;
+        public string displayNameEn;
+
+        // Player-facing name follows the active locale (i18n spec).
+        public string LocalizedName =>
+            I18nService.Language == "en" && !string.IsNullOrEmpty(displayNameEn) ? displayNameEn : displayNameZh;
 
         [Tooltip("Extracted prefab of the candy mesh used to fill the pile.")]
         public GameObject prefab;

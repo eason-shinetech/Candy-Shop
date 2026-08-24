@@ -87,16 +87,21 @@ Full prompt sheets and file list: [Art Bible](2026-08-24-candy-shop-art-bible.md
 ## 3. Core loop
 
 ```
-Boot → load save → daily sign-in → Main Menu
-  → Start Run
-    → spawn next customer (queue)
+Boot → load save → daily sign-in + stamina refresh → Main Menu
+  → Start Run (requires stamina ≥ 1)
+    → current customer starts → spend 1 stamina
     → player taps candies
-    → order complete → coins → next customer
-    → fail (0 stars or timer 0) → Game Over → Main Menu
+    → order complete → coins → settle stamina (perfect +1 / pass +0)
+         → if stamina ≥ 1: next customer
+         → if stamina < 1: Shift Over (tired) → Main Menu
+    → fail (0 stars or timer 0) → Game Over (optional revive)
+         → leave without revive → fail −3 stamina → Main Menu
   → Recipe Shop (from Main Menu; spends coins)
 ```
 
-A **run** is one continuous serving session: stars start at 3, customers keep coming until fail. There is no fixed "level count" in MVP. Difficulty scales with customers served in the current run.
+A **run** is one continuous serving session: stars start at 3, customers keep coming until **fail** (0 stars or timer 0) or **stamina cannot start the next guest**. There is no fixed "level count" in MVP. Difficulty scales with customers served in the current run.
+
+Daily **stamina (体力)** is the session cap: **20 per local date**. Full rules: **§8.2**.
 
 ---
 
@@ -170,6 +175,7 @@ Tag each scene instance with the `CandyTypeId` of its source mesh. The Game scen
 
 - Visible queue: **current customer + 2 waiting** (3 portraits / speech-bubble slots).
 - Off-screen pool: generate the next customer as soon as the current one is served so the queue always looks full.
+- **Stamina is spent only when a guest becomes current**, not when a waiting/off-screen guest is generated. Waiting portraits are preview only (see §8.2).
 - Customers are simple 3D or 2D portraits in the HUD. MVP: HUD cards are enough; full walking NPCs are optional polish, not required.
 
 ### 5.2 Order generation
@@ -231,7 +237,7 @@ HUD shows remaining time as a bar + integer seconds. Below 5 seconds: bar turns 
 
 There is no "undo". There is no extra penalty beyond 1 star per wrong candy.
 
-**Serve success:** when every required count is 0, the customer is satisfied. If `wrongPicksThisCustomer == 0` (perfect): grant +5 coins (not doubled by ad), stamp `完美`, and `stars = min(3, stars + 1)` with star-fill juice. Then award the normal speed coins, show the reward chip (optional 看广告翻倍 on the **speed reward only**, see §14). Then slide queue and spawn next order. The double-reward button must not auto-play an ad.
+**Serve success:** when every required count is 0, the customer is satisfied. If `wrongPicksThisCustomer == 0` (perfect): grant +5 coins (not doubled by ad), stamp `完美`, `stars = min(3, stars + 1)` with star-fill juice, and **stamina +1** (cap `dailyMax`, see §8.2). Pass (served with ≥1 wrong pick): stamina **+0**. Then award the normal speed coins, show the reward chip (optional 看广告翻倍 on the **speed reward only**, see §14). Then, if stamina ≥ 1, slide queue and make the next guest current (that start spends 1 stamina). If stamina < 1, **Shift Over** (§8.2) instead of spawning. The double-reward button must not auto-play an ad.
 
 ---
 
@@ -264,12 +270,15 @@ Defaults:
 
 Faster clears pay more. HUD pops `+N` over the coin icon. A small **看广告翻倍** action sits on that chip (opt-in, skippable, see §14).
 
-### 7.3 Game Over
+### 7.3 Game Over (stars / timer fail)
 
 - No coin penalty on Game Over.
 - Coins already earned and spent this run stay as saved.
-- Show: customers served, coins earned this run, remaining stars.
+- Show: customers served, coins earned this run, remaining stars, remaining stamina.
 - Optional **看广告再试一次** (revive, once per run). No run-total double on this screen (per-serve double is enough). See §14.
+- **Fail stamina −3** applies when the player **leaves** this screen without a successful revive (see §8.2). Revive continues the **same** current guest; do not spend another stamina and do not apply −3.
+
+**Shift Over** (stamina cannot start the next guest after a successful serve) is **not** this screen: no revive, no fail −3. See §8.2.
 
 ---
 
@@ -311,11 +320,113 @@ Uses the same local date as sign-in. One featured `CandyTypeId` per day, chosen 
 - HUD chip (under order chips): featured icon + `进度 5/12`.
 - On reaching 12: toast `今日挑战完成`, grant **+120 coins** and **+1 Freeze** (inventory). Once per date (`dailyChallengeClaimed`). No ad. Do not pause picking more than a toast.
 
-Main Menu banner: `今日配方：{name}  {progress}/12` or `已完成`. Tapping the banner opens Recipe Shop if locked, otherwise starts 开始营业.
+Main Menu banner: `今日配方：{name}  {progress}/12` or `已完成`. Tapping the banner opens Recipe Shop if locked, otherwise starts 开始营业 (still blocked if stamina < 1, same as the start button).
 
 Do not roll a new type mid-day. Do not require a separate challenge scene.
 
+### 8.2 Daily stamina (体力)
+
+Session cap so a day cannot be an infinite shift. Same **device local calendar date** as sign-in (`yyyy-MM-dd`). Numbers live on `StaminaConfig` (ScriptableObject). Do not hardcode except as these defaults.
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `dailyMax` | **20** | Pool size and daily refresh target |
+| `costPerCustomer` | **1** | Spent when a guest **becomes current** |
+| `perfectRefund` | **+1** | After a perfect serve |
+| `passDelta` | **+0** | After a non-perfect serve |
+| `failPenalty` | **−3** | After a confirmed fail (not on revive) |
+
+Always clamp: `stamina = Clamp(stamina, 0, dailyMax)`.
+
+#### Refresh
+
+Evaluated on Boot (with sign-in), when entering Main Menu, and when the player taps 开始营业 — **not** mid-customer.
+
+| Event | What happens |
+| --- | --- |
+| `staminaDate` ≠ today (including first launch / missing field) | `stamina = dailyMax` (20), `staminaDate = today`. Does **not** add 20 on top of leftover. Yesterday’s leftover is discarded. |
+| Same local date | Keep persisted `stamina` |
+| Mid-run past midnight | Do **not** refill until Main Menu or next Boot |
+
+New save: `stamina = 20`, `staminaDate = today`.
+
+#### Spend (customer start)
+
+When a guest **becomes the current** customer (first guest of a run, or the next guest after a serve):
+
+1. If `stamina < costPerCustomer` (1): **do not** make them current.
+   - From Main Menu: do not load Game scene; show the empty-stamina sheet.
+   - After a serve: **Shift Over** (below).
+2. Else: `stamina -= 1`, save immediately, pop a small `体力-1` on the stamina icon.
+
+Waiting / off-screen queue entries cost **nothing** until they become current. Do not spend 3 at run start for the visible queue.
+
+Tutorial’s first guest still costs 1 (new players have 20).
+
+#### Settle (customer end)
+
+| Result | When | Stamina |
+| --- | --- | --- |
+| **Perfect** | Served and `wrongPicksThisCustomer == 0` | **+1** (then clamp). Show `体力+1` with the `完美` stamp. |
+| **Pass** | Served and at least one wrong pick | **+0**. No extra stamina juice. |
+| **Fail** | Timer 0, stars 0, or confirmed 放弃本局 — and the player **does not** revive | **−3** (then clamp). Show `体力-3`. |
+
+Net after a finished guest (before clamp):
+
+| Result | Net vs the start-spend |
+| --- | --- |
+| Perfect | −1 + 1 = **0** (can continue at the same pool if you started at cap: 20 → 19 → 20) |
+| Pass | −1 + 0 = **−1** |
+| Fail | −1 + (−3) = **−4**, floor 0 |
+
+Worked examples (OpenCode, treat as acceptance):
+
+| Start stamina | Event | End stamina |
+| --- | --- | --- |
+| 20 | Guest starts | 19 |
+| 19 | Perfect settle | 20 |
+| 20 | Guest starts, then pass | 19 |
+| 19 | Guest starts, then fail and leave (no revive) | 15 |
+| 1 | Guest starts, then pass | 0 → Shift Over, cannot start next |
+| 1 | Guest starts, then perfect | 1 → can start next |
+| 2 | Guest starts, then fail and leave | 0 |
+| 0 | Tap 开始营业 | Stay on menu, empty sheet; stamina stays 0 until next local date |
+
+**Revive** (`reward_revive`): the fail is **not** confirmed. Same current guest continues. No second start-spend. No −3. Later perfect/pass/fail-and-leave uses the table above once.
+
+Apply **−3 once** when fail is confirmed:
+
+- Game Over → 回到主菜单 (revive unused, skipped, already used this run, or ad not ready)
+- Pause → 放弃本局 → confirm
+- Do **not** apply −3 if they revive successfully
+- Do **not** apply −3 on Shift Over (they already served; they are out of energy, not failed)
+
+#### Shift Over vs Game Over
+
+| Screen | Cause | Revive | Fail −3 | Coins |
+| --- | --- | --- | --- | --- |
+| Game Over `营业结束` | 0 stars or timer 0 | Yes, once per run if ready | Yes, on leave without revive | Keep |
+| Shift Over `打烊休息` | After a **successful** serve, `stamina < 1` so the next guest cannot start | No | No | Keep |
+
+Both persist coins and update `bestCustomersServed` if the serve count beat best (Shift Over counts served guests the same way).
+
+#### Main Menu gate
+
+- Show `体力 n/20` near coins.
+- 开始营业 with `stamina < 1`: stay on menu, sheet title/body from i18n (`stamina_empty_*`). No ad, no coin buy, no waiting timer regen in MVP.
+- Grey/disable 开始营业 when empty; tapping still opens the same sheet (do not silently ignore).
+
+#### HUD
+
+- Game HUD: stamina `n/20` next to coins (icon + number, never color-only). Same candy-dot language as power-up badges.
+- Start-spend and perfect/fail deltas are floating text on that icon.
+
+#### Out of scope for stamina (do not add)
+
+Watch-ad +stamina, coin-buy stamina, regen over minutes, overflow above `dailyMax`, stamina cost on power-ups or recipe shop.
+
 ---
+
 
 ## 9. Power-ups
 
@@ -383,11 +494,12 @@ Splash or empty camera. Load save. Apply orientation lock. Load Main Menu.
 - Title: 糖果店
 - Buttons: 开始营业 / Open Shop, 配方商店 / Recipes, 设置 / Settings (音乐·Music / 音效·Sound / 振动·Vibration / **语言 Language**)
 - All labels from [i18n table](2026-08-24-candy-shop-i18n.md), not hardcoded.
-- Coins top-right
+- Coins **and stamina** `n/20` top-right (stamina icon + number)
 - `历史最佳：服务 N 位客人`
 - Banner `今日配方` (see §8.1)
 - Sign-in popup when needed; streak as **7 dots**
-- Tutorial on first 开始营业 if `tutorialDone` is false — **Tutorial Spotlight** (see plugins spec §2), not a homemade overlay
+- If stamina < 1: 开始营业 looks disabled; tap opens empty-stamina sheet (§8.2). Do not enter Game scene.
+- Tutorial on first 开始营业 if `tutorialDone` is false — **Tutorial Spotlight** (see plugins spec §2), not a homemade overlay. Tutorial still requires stamina ≥ 1 (new saves have 20).
 
 ### 10.3 Recipe Shop
 
@@ -398,7 +510,7 @@ Splash or empty camera. Load save. Apply orientation lock. Load Main Menu.
 
 ### 10.4 Game HUD (top → bottom, portrait)
 
-1. Top safe area: stars (3), coins, pause
+1. Top safe area: stars (3), **stamina n/20**, coins, pause
 2. Customer queue strip (current highlighted)
 3. Order chips (icon + remaining number, never color-only). Punch the chip on a matching pick. Daily-challenge chip: featured icon + `n/12`.
 4. Center: 3D pile (largest region)
@@ -406,23 +518,32 @@ Splash or empty camera. Load save. Apply orientation lock. Load Main Menu.
 6. Bottom thumb zone: 磁铁 / 龙卷风 / 冰冻 with **count badge**. Tap uses if count > 0. If 0, buy sheet (金币 + 看广告). Optional + to stockpile.
 7. Coin-insufficient sheet and serve-success chip (翻倍) — player-initiated only
 
-Pause: 继续, 放弃本局 (confirm: `真的要打烊吗？本局星星和进度会结束`), 音乐/音效/振动. Pause **freezes** the customer timer. Pause is not Freeze (no Freeze VFX).
+Pause: 继续, 放弃本局 (confirm: `真的要打烊吗？当前客人会失败（体力-3），本局星星和进度会结束`), 音乐/音效/振动. Pause **freezes** the customer timer. Pause is not Freeze (no Freeze VFX). Confirmed quit applies fail stamina −3 (§8.2) then Main Menu.
 
 Timer starts after tutorial is dismissed on the first run.
 
-### 10.5 Game Over
+### 10.5 Game Over and Shift Over
+
+**Game Over** (0 stars or timer 0):
 
 - 营业结束
 - `本局服务 {n} 位` / `赚到 {coins} 金币` / `历史最佳 {best}`；new best → `新纪录`
-- 回到主菜单
+- Remaining stamina; if they leave without revive, fail −3 applies on 回到主菜单 (show `体力-3` on that icon so the cost is obvious)
+- 回到主菜单 (applies fail −3 if not revived)
 - 看广告再试一次 (revive, hide if already used this run or ad not ready)
 - Do not auto-start any ad on this screen
+
+**Shift Over** (successful serve, next guest blocked by stamina < 1):
+
+- 打烊休息
+- Same served / coins / best / 新纪录 lines
+- 回到主菜单 only. No revive. No fail −3.
 
 ### 10.6 Feedback
 
 - Correct tap: candy flies to the matching chip, chip punch, light haptic; combo floating text `连击 xN` (visual only, no extra coins)
 - Wrong tap: camera or HUD shake, star decrement, medium haptic, candy still removed
-- Perfect serve (0 wrong this customer): +5 coins, stamp `完美`, restore **1 star** if below 3 (star-fill juice). The +5 is **not** doubled by the ad.
+- Perfect serve (0 wrong this customer): +5 coins, stamp `完美`, restore **1 star** if below 3 (star-fill juice), **stamina +1** (cap 20). The +5 is **not** doubled by the ad.
 - Serve: small pastel confetti (≤80 particles)
 - After 8s with no correct pick this customer: toast `找不到？用龙卷风翻一翻` (once per customer)
 - Not enough coins: button shake, then the insufficient-coins sheet (ad is opt-in)
@@ -475,11 +596,15 @@ Path: `Application.persistentDataPath/candy_shop_save.json`
   "dailyChallengeTypeId": "",
   "dailyChallengeYesterdayId": "",
   "dailyChallengeProgress": 0,
-  "dailyChallengeClaimed": false
+  "dailyChallengeClaimed": false,
+  "stamina": 20,
+  "staminaDate": ""
 }
 ```
 
 Starter candy types are **not** stored as recipes; they are always unlocked in code.
+
+Missing `stamina` / `staminaDate` on an old save: treat as a new date → refresh to 20 for today (§8.2).
 
 No cloud, no account.
 
@@ -534,7 +659,7 @@ IAdService
 | `reward_powerup_buy_tornado` | Buy sheet when restocking Tornado | Same |
 | `reward_powerup_buy_freeze` | Buy sheet when restocking Freeze | Same |
 | `reward_daily_extra` | Sign-in popup | **+50 coins**, once per local date |
-| `reward_revive` | Game Over | Restore **1 star**; if fail was timeout, restore that customer's remaining order and full timer; if fail was 0 stars, set stars to 1 and keep current order. Resume the run. Once per run |
+| `reward_revive` | Game Over | Restore **1 star**; if fail was timeout, restore that customer's remaining order and full timer; if fail was 0 stars, set stars to 1 and keep current order. Resume the run. Once per run. **Does not** spend stamina again and **does not** apply fail −3 |
 | `interstitial_after_run` | After Game Over → Main Menu | None. **Disabled by default** (`AdConfig.interstitialEnabled = false`) |
 
 ### 14.2 Frequency caps (`AdConfig`)
@@ -585,6 +710,7 @@ Use i18n keys (`ad_buy_cta`, `ad_double`, …). zh/en in [i18n spec](2026-08-24-
 - More than the three specified power-ups
 - Combo **coin** multiplier beyond speed-bonus (visual 连击 is in MVP)
 - Narrative / dialogue trees
+- Stamina refill via ads, coins, or timed regen; stamina overflow above 20
 
 ---
 
@@ -593,7 +719,7 @@ Use i18n keys (`ad_buy_cta`, `ad_double`, …). zh/en in [i18n spec](2026-08-24-
 A build is MVP-complete when:
 
 1. Unity **6000.0.77f1**, Android portrait-only on device or editor Game view 1080x1920. No iOS build target.
-2. A run can serve several customers, fail on stars or timer, and persist coins.
+2. A run can serve several customers, fail on stars or timer, end on **stamina Shift Over**, and persist coins **and stamina**.
 3. Wrong candy removes the object and deducts exactly one star.
 4. Daily 200 / streak-7 recipe / all-unlocked 500 behave as specified.
 5. All three power-ups work and each shows its particle VFX.
@@ -601,7 +727,8 @@ A build is MVP-complete when:
 7. UI copy is **zh and en** (i18n table + language toggle); comments in code are English.
 8. All 2D UI, icons, customer portraits, and particles match the cartoon-cute art bible (same palette, outlines, kawaii shapes). Mixed or realistic assets fail review.
 9. `IAdService` + stub: insufficient coins → opt-in +80; serve success → opt-in double; **restock power-up = coins AND ad**; **use is free if count > 0**; no auto-play during picking.
-10. Tutorial once; front-most pick; UI blocks world taps; perfect serve **+5 coins and +1 star (cap 3)**; daily featured-recipe challenge 12/12; best-serve on menu; haptics toggle. See also [supplements](2026-08-24-candy-shop-supplements.md) §1.
+10. Tutorial once; front-most pick; UI blocks world taps; perfect serve **+5 coins, +1 star (cap 3), and +1 stamina (cap 20)**; daily featured-recipe challenge 12/12; best-serve on menu; haptics toggle. See also [supplements](2026-08-24-candy-shop-supplements.md) §1.
+11. Daily stamina **20/20** refreshes on a new local date; each **current** guest costs 1; perfect +1 / pass +0 / confirmed fail −3; cannot start a run or the next guest at 0; no stamina ads.
 
 ---
 
@@ -612,11 +739,12 @@ Ship [supplements](2026-08-24-candy-shop-supplements.md) **§1** only. Do not sh
 - First-run **Tutorial Spotlight** (3 holes); timer starts after dismiss.
 - Raycast front-most candy; HUD eats taps; drag is not a pick.
 - Buried hint toast once per customer after 8s without a correct pick.
-- Visual combo only; perfect serve +5 coins **and +1 star if below 3**; serve confetti.
+- Visual combo only; perfect serve +5 coins **and +1 star if below 3** **and +1 stamina (cap 20)**; serve confetti.
 - Daily featured-recipe challenge (§8.1): 12 correct picks, 70% order bias if unlocked, 20% off if locked, reward 120 coins + 1 Freeze.
+- Daily stamina (§8.2): 20/day, −1 on current guest start, perfect +1 / pass +0 / fail −3; menu `n/20`; Shift Over when empty after a serve.
 - Main menu best score + 7-day streak dots + 今日配方 banner; settings 音乐/音效/振动/**语言**.
 - **zh / en** i18n ([i18n spec](2026-08-24-candy-shop-i18n.md)); toggle applies immediately.
 - Subtle pile idle jiggle; low-time vignette under 5s.
 - Recipe unlock toast `新糖果上架` next run.
-- Game Over shows 本局 / 历史最佳 / 新纪录.
+- Game Over shows 本局 / 历史最佳 / 新纪录; Shift Over when stamina blocks the next guest.
 
