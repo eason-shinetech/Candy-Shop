@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5402e24bd8e62264c82f5876014f3067, type: 3}
+  m_Name: PowerUp_tornado
+  m_EditorClassIdentifier: 
+  powerUpId: tornado
+  displayNameZh: "\u9F99\u5377\u98CE"
+  buyCost: 40
+  effectDuration: 4
+  vfxPrefab: {fileID: 1358509820861029363, guid: 7da80d17eaace2a46b983079b825d05c, type: 3}
+  accentColor: {r: 0.55, g: 0.85, b: 0.65, a: 1}

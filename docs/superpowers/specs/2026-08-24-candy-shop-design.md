@@ -1,0 +1,624 @@
+# Candy Shop — Game Design Spec
+
+**Date:** 2026-08-24  
+**Status:** Approved for OpenCode implementation (MVP)  
+**Engine:** Unity **6000.0.77f1** (3D URP). Do not use a different Editor version.  
+**Platform:** Android only (no iOS), **portrait only**  
+**Input:** Touch tap (no mouse-only desktop layout required)  
+**Persistence:** Local device only (JSON file, not PlayerPrefs for the full save blob)  
+**Language of UI copy:** Chinese  
+**Language of code comments:** English
+
+This document is the source of truth for gameplay rules. The implementation plan describes file layout and task order. Do not change these rules without updating this spec.
+
+---
+
+## 1. One-sentence pitch
+
+You run a candy shop. Customers queue with mixed candy orders. You tap candies out of a 3D pile before the customer's timer hits zero. Wrong candy costs a star. Coins buy recipes and in-run power-ups.
+
+---
+
+## 2. Platform and presentation
+
+| Rule | Value |
+| --- | --- |
+| Unity Editor | **6000.0.77f1** only. Typical path: `C:\Program Files\Unity\Hub\Editor\6000.0.77f1\Editor\Unity.exe`. `ProjectSettings/ProjectVersion.txt` must be `m_EditorVersion: 6000.0.77f1`. Template: **3D (URP)**. Do not open or generate the project with another Editor. |
+| Target | **Android only.** Do not add an iOS module, iOS Player Settings, Xcode project, or App Store checklist. |
+| Build | Android APK (or AAB if asked later). Editor Game view 1080 x 1920 is the layout reference. |
+| Orientation | Portrait only. Landscape is **not** supported. |
+| Player Settings | Android: `Default Orientation = Portrait`. Disable Auto Rotation, Landscape Left, Landscape Right. `Allowed Orientations for Auto Rotation` = Portrait only. |
+| Runtime lock | On boot: `Screen.orientation = ScreenOrientation.Portrait`; `autorotateToLandscapeLeft/Right = false`. |
+| Reference aspect | 9:16. Also layout for 9:19.5 / 9:20 with Safe Area (Android punch-hole / gesture nav). |
+| Camera | Fixed 3D camera looking at the candy pile. No free orbit in MVP. Optional tiny idle sway is allowed; player cannot rotate the world. |
+| UI canvas | Screen Space Overlay, reference resolution 1080 x 1920, match height. |
+| Landscape | No landscape layouts, no orientation-change reflow, no "please rotate" overlay that unlocks landscape. If the OS still reports landscape, keep rendering portrait (letterbox if needed). |
+| Art style | **卡通可爱风 (cartoon cute)**. All generated 2D images, UI, icons, VFX color, and customer portraits must share one style bible. Do not mix realistic, dark, pixel-art, or cyberpunk looks. |
+
+### 2.1 Art direction (mandatory for every generated image)
+
+**One style for the whole game.** If an asset looks like it belongs to a different game, it is rejected.
+
+Use this **prompt prefix** on every image-generation request (keep it identical):
+
+```
+Cute cartoon candy-shop game art, kawaii chibi, soft rounded shapes,
+thick clean outlines, pastel candy colors, glossy sugar highlights,
+warm bakery lighting, cheerful and wholesome, high readability at small size,
+no realism, no horror, no photoreal textures, no text unless specified.
+Style must match a children's mobile game UI kit.
+```
+
+| Token | Value |
+| --- | --- |
+| Mood | Cheerful, sweet, safe for kids, candy store |
+| Shapes | Round, squishy, oversized heads / icons, no sharp military geometry |
+| Line | Medium-thick clean vector-like outline (not sketchy, not ink wash) |
+| Color | Pastel + candy accents. See palette below. Max 6 colors per icon plus white highlight |
+| Lighting | Soft studio / bakery window. Pink-warm key light. Specular sugar shine, not PBR metal |
+| Characters | Chibi 2–3 heads tall, big eyes, simple mouths, no realistic anatomy |
+| Forbidden | Photoreal, grimdark, blood, horror, noisy textures, thin-line fashion illustration, pixel art, low-poly unlit cubes as final art, mixed styles in one atlas |
+
+**Palette (hex, use these names in prompts):**
+
+| Name | Hex | Use |
+| --- | --- | --- |
+| Cream | `#FFF6E8` | Panels, cards |
+| Sugar Pink | `#FF8FB8` | Primary buttons, hearts |
+| Berry | `#E85A8C` | Pressed / accent |
+| Sky Mint | `#7EE0C6` | Positive, serve success |
+| Lemon | `#FFE07A` | Coins, stars, timer OK |
+| Cocoa | `#6B3F2A` | Text on light panels (or dark brown outline) |
+| Grape | `#A78BFA` | Secondary chips |
+| Ice | `#B8E8FF` | Freeze |
+| Magnet Red | `#FF6B6B` | Magnet (still cute, not industrial) |
+| Wind | `#C8F5D4` | Tornado |
+
+**UI chrome:** rounded rectangles (corner radius large), candy-stripe or frosting borders, soft drop shadow. Buttons look like iced cookies, not flat Material Design.
+
+**3D candy kit:** keep the imported `Candy/` models if they already read as cute candy. Do not retarget them to realism. Lighting in GameScene: warm, slightly saturated, no harsh realistic shadows.
+
+**Particles:** same palette (pastel sparkles, hearts, sugar dust, rounded blobs). No photoreal smoke or fire.
+
+Full prompt sheets and file list: [Art Bible](2026-08-24-candy-shop-art-bible.md).
+
+---
+
+## 3. Core loop
+
+```
+Boot → load save → daily sign-in → Main Menu
+  → Start Run
+    → spawn next customer (queue)
+    → player taps candies
+    → order complete → coins → next customer
+    → fail (0 stars or timer 0) → Game Over → Main Menu
+  → Recipe Shop (from Main Menu; spends coins)
+```
+
+A **run** is one continuous serving session: stars start at 3, customers keep coming until fail. There is no fixed "level count" in MVP. Difficulty scales with customers served in the current run.
+
+---
+
+## 4. Candy types and recipes
+
+### 4.1 Source of truth = the 3D kit (not a made-up list)
+
+Recipe count is **not** a fixed 7 or 10. It is derived from `Candy/Premium` after Unity imports the models.
+
+**Rule:** every distinct **pickable candy mesh** in the kit is one `CandyTypeId` and one recipe (except the 3 starters, which are unlocked for free and have no shop recipe).
+
+| Include as a candy type | Exclude |
+| --- | --- |
+| Each unique mesh (or mesh + material variant) in `candy_kit.fbx` / `candy_kit.glb` that is a candy prop | `terrain_kit`, `cloud_kit` |
+| Extra candy materials in the folder (`Chocolate.mat`, `Waffer.mat`) if they belong to distinct candy meshes | Shop furniture, terrain, clouds, lights, cameras |
+| Color / shape variants that are **separate objects** in the FBX (e.g. Candy_setA vs Av2 vs Balloon_A) | Duplicate instances of the **same** mesh used only to fill the pile |
+
+Pile instances: many copies of `lollipop_red` in the scene still count as **one** type / **one** recipe.
+
+Hint from current texture names (not a final count — count meshes after import):
+
+- Atlases: `Candy_setA`, `Av2`, `Av3`, `Candy_setB`, `Bv2`, `Candy_setC`–`G`
+- `Balloon_A` / `B` / `C`
+- `Chocolate`, `Waffer`
+
+OpenCode **must** after import:
+
+1. List candy meshes (Editor script `CandyCatalogBuilder` is fine).
+2. Sort by hierarchy name.
+3. Write `docs/generated/candy-catalog.md` with: mesh name, proposed `CandyTypeId`, starter or recipe, cost.
+4. Create one `CandyTypeDefinition` asset per row and one `RecipeDefinition` per non-starter row.
+
+If FBX/GLB binaries are missing, stop and list missing files. Do not keep the old 10-name placeholder catalog as production data.
+
+### 4.2 Starters vs recipes
+
+- **Exactly 3 starters**, always free. Default: first 3 candy meshes in sorted name order. If `Chocolate` and `Waffer` meshes exist, prefer those two plus the first remaining mesh as the 3 starters (still exactly 3).
+- **Every other candy mesh = one shop recipe** that unlocks that type.
+- Orders may only request **unlocked** types (starters + bought recipes).
+- Display names: Chinese. If the mesh name is English (`CandyCane_Red`), map in the catalog table; do not show raw FBX names in UI.
+
+### 4.3 Recipe prices
+
+Let `R` = number of non-starter candies. Recipe `i` (0-based, cheapest first, same sort as catalog):
+
+```
+cost(i) = 120 + i * 60
+```
+
+Example: 7 recipes → 120, 180, 240, 320 would be wrong; use the formula (120, 180, 240, 300, 360, 420, 480).
+
+- Cannot buy an already unlocked recipe.
+- If the player cannot afford it: show cost in red; offer 看广告+80 (spec §14), not a free unlock.
+- Unlock is instant and persisted.
+- Daily streak-7 still unlocks the **cheapest remaining** recipe. All-unlocked **+500** uses this full catalog (`R` recipes all owned).
+
+### 4.4 Scene pile
+
+Tag each scene instance with the `CandyTypeId` of its source mesh. The Game scene contains a **pre-placed pile** of those meshes (many copies per type).
+
+- Tapping a candy **removes** it from the pile (correct or wrong).
+- When a type runs out in the pile, that type cannot be picked until restock.
+- **Restock:** when a customer is served **or** when remaining pickable candies of a requested type drop to 0, refill missing instances of **unlocked** types so the pile never starves a valid order. Restock may lerp new candies in from above (simple drop). Do not restock mid-pick of a single candy.
+- Do not spawn locked (not yet bought) types into the pile.
+
+---
+
+## 5. Customers and orders
+
+### 5.1 Queue
+
+- Visible queue: **current customer + 2 waiting** (3 portraits / speech-bubble slots).
+- Off-screen pool: generate the next customer as soon as the current one is served so the queue always looks full.
+- Customers are simple 3D or 2D portraits in the HUD. MVP: HUD cards are enough; full walking NPCs are optional polish, not required.
+
+### 5.2 Order generation
+
+For each customer:
+
+1. `typeCount` = random integer in **[1, 3]**, clamped to the number of unlocked candy types.
+2. Choose `typeCount` distinct unlocked types uniformly, then apply **daily challenge bias** if the featured type is unlocked (spec §8.1: 70% include featured).
+3. `totalCandies` = random integer in **[6, 30]**.
+4. Split `totalCandies` across the chosen types. Every chosen type gets **at least 1**. Remaining units distributed uniformly at random.
+5. Scale slightly with run progress (optional, data-driven): after every 5 served customers, bias `totalCandies` toward the upper half of the range. Never exceed 30.
+
+Order UI shows icons + remaining counts, e.g. `棒棒糖 x4  软糖 x8`.
+
+### 5.3 Per-customer timer (independent)
+
+Each customer has a **private countdown**. Serving a customer discards that timer and starts a new one for the next customer.
+
+**Default formula** (all values on `CustomerOrderConfig`):
+
+```
+timeSeconds = baseSeconds + totalCandies * secondsPerCandy
+timeSeconds = Clamp(timeSeconds, minSeconds, maxSeconds)
+```
+
+Defaults:
+
+| Field | Default |
+| --- | --- |
+| `baseSeconds` | 6 |
+| `secondsPerCandy` | 1.15 |
+| `minSeconds` | 10 |
+| `maxSeconds` | 45 |
+
+Examples: 6 candies ≈ 12.9s → clamp 12.9; 30 candies ≈ 40.5s.
+
+HUD shows remaining time as a bar + integer seconds. Below 5 seconds: bar turns red and pulses.
+
+**Timer 0:** immediate Game Over (do not serve a partial order, do not award coins for that customer).
+
+**Freeze power-up:** pauses this countdown only. Does not pause candy physics/VFX/input except as needed for Freeze VFX.
+
+---
+
+## 6. Stars and picking
+
+| Rule | Value |
+| --- | --- |
+| Stars at run start | 3 |
+| Stars persist | Across the whole run (not reset per customer) |
+| Wrong tap | −1 star, **remove** the tapped candy from the pile |
+| Correct tap | Remaining count for that type −1, remove candy |
+| Stars hit 0 | Immediate Game Over |
+| Perfect serve | 0 wrong picks this customer: extra **+5 coins**, stamp `完美`, and **restore 1 star** if stars < 3 |
+| Already-taken candy | Ignore (no double deduct) |
+| Tap empty space / UI | No star change |
+| Tap a type not in the current order | Wrong (even if that type is unlocked) |
+| Tap a type in the order whose remaining is already 0 | Wrong |
+
+There is no "undo". There is no extra penalty beyond 1 star per wrong candy.
+
+**Serve success:** when every required count is 0, the customer is satisfied. If `wrongPicksThisCustomer == 0` (perfect): grant +5 coins (not doubled by ad), stamp `完美`, and `stars = min(3, stars + 1)` with star-fill juice. Then award the normal speed coins, show the reward chip (optional 看广告翻倍 on the **speed reward only**, see §14). Then slide queue and spawn next order. The double-reward button must not auto-play an ad.
+
+---
+
+## 7. Economy
+
+### 7.1 Coin wallet
+
+- Single persistent `coins` integer on the save file.
+- In-run power-up **buys** spend this same wallet (use does not).
+- Coins never go below 0. Failed spend is a no-op + UI shake, then offer **看广告获得金币** if the ad service is ready (see §14). Never auto-play the ad.
+
+### 7.2 Reward for serving a customer
+
+```
+speedRatio = remainingTime / totalTime          // 0..1
+reward = round(baseReward
+        + totalCandies * perCandy
+        + speedRatio * speedBonusMax)
+reward = max(reward, minReward)
+```
+
+Defaults:
+
+| Field | Default |
+| --- | --- |
+| `baseReward` | 8 |
+| `perCandy` | 1 |
+| `speedBonusMax` | 24 |
+| `minReward` | 10 |
+
+Faster clears pay more. HUD pops `+N` over the coin icon. A small **看广告翻倍** action sits on that chip (opt-in, skippable, see §14).
+
+### 7.3 Game Over
+
+- No coin penalty on Game Over.
+- Coins already earned and spent this run stay as saved.
+- Show: customers served, coins earned this run, remaining stars.
+- Optional **看广告再试一次** (revive, once per run). No run-total double on this screen (per-serve double is enough). See §14.
+
+---
+
+## 8. Daily sign-in
+
+Evaluated once per app session on Boot, after save load, using **device local calendar date** (`yyyy-MM-dd`).
+
+| Event | Reward |
+| --- | --- |
+| First launch of a new local date | **+200 coins** |
+| Consecutive days opened (streak) | `dailyStreak` += 1, cap display at 7 |
+| Missed a day (last sign-in date is not yesterday and not today) | streak resets to 1 (today counts) |
+| Same date already claimed | no extra 200 |
+| `dailyStreak` reaches **7** on a claim | unlock **one** not-yet-owned recipe (cheapest remaining). If none remain, skip recipe and still apply the all-unlocked bonus if eligible |
+| After a claim, if **all recipes** are unlocked and `allRecipesBonusClaimed` is false | **+500 coins**, set flag true |
+
+Streak 7 does **not** auto-reset to 0 in MVP. After 7, further daily 200 still applies; the recipe reward fires only when streak **becomes** 7 (not every day after). Optional later: reset streak after 7. MVP: `recipeGrantedForThisSevenCycle` — grant recipe only on the transition to 7; next days do not grant more recipes from streak until streak is broken and rebuilt to 7 again.
+
+Show a sign-in panel on Main Menu if a reward was granted this boot (coins and/or recipe and/or 500 bonus). Player taps 领取 / 关闭. Optional extra: **看广告再领 +50** once per day (see §14). Never auto-play.
+
+### 8.1 Daily featured-recipe challenge (MVP)
+
+Uses the same local date as sign-in. One featured `CandyTypeId` per day, chosen from the **full catalog** (starters + every recipe candy).
+
+**Pick rule:** `hash(yyyy-MM-dd) % catalogCount`. If catalog length > 1 and the result equals yesterday’s featured id, take the next index. Persist `dailyChallengeTypeId` and `dailyChallengeDate`. On a new local date: reset `dailyChallengeProgress` to 0 and `dailyChallengeClaimed` to false, then roll.
+
+**Goal:** **12 correct picks** of that type today (Magnet auto-picks count). Wrong taps of that type do not add progress. Progress is saved across runs. Quota `N=12` is on `DailyChallengeConfig`.
+
+**If the type is locked:**
+
+- Orders still cannot request it (existing unlock rule).
+- Main Menu + Recipe Shop mark the row `今日配方` and sell it at **20% off** for that date only (`round(cost * 0.8)` to nearest 10, min 80).
+- Copy: `解锁后才能完成今日挑战`.
+- Discount does not skip the normal buy (still coins only in the shop — no extra ad for recipes).
+
+**If the type is unlocked** (including after they buy it today):
+
+- Order generation **bias:** 70% chance the featured type is one of this customer’s 1–3 types (still only from unlocked types). Do not make every order 100% that candy.
+- HUD chip (under order chips): featured icon + `进度 5/12`.
+- On reaching 12: toast `今日挑战完成`, grant **+120 coins** and **+1 Freeze** (inventory). Once per date (`dailyChallengeClaimed`). No ad. Do not pause picking more than a toast.
+
+Main Menu banner: `今日配方：{name}  {progress}/12` or `已完成`. Tapping the banner opens Recipe Shop if locked, otherwise starts 开始营业.
+
+Do not roll a new type mid-day. Do not require a separate challenge scene.
+
+---
+
+## 9. Power-ups
+
+HUD buttons during a run. Inventory is **persistent** (`magnetCount` / `tornadoCount` / `freezeCount` on the save file).
+
+### 9.0 Use vs buy
+
+| Situation | What happens |
+| --- | --- |
+| Count **> 0** | Tap = **use immediately**. Consume 1. No ad. No extra coin. No per-run cap. Can use every customer, including several times in one order if count allows. |
+| Count **== 0** (道具不够) | Tap does **not** use. Open the **buy sheet**. Purchase requires **coins AND a rewarded ad**, both. Grant +1 only if coins were deducted **and** the ad completed. |
+
+There is **no** “coins only” buy and **no** “ad only / 看广告使用” channel.
+
+**Buy sheet (count == 0 or player taps +):**
+
+1. Show: 购买 磁铁 +1 / 价格 / 「需观看广告」.
+2. If coins < cost: 金币不足 → 看广告+80 / 取消. After +80 they still must complete **buy** (coins + purchase ad).
+3. If coins >= cost and purchase ad is ready: 购买 → deduct coins → `ShowRewarded(reward_powerup_buy_*)`.
+   - Ad completed: `count += 1`, save, then **auto-use** that unit (they tapped to use). Net: paid, watched, effect plays, count back to 0 if they started at 0.
+   - Ad skipped / failed: **refund coins**, count unchanged, no effect.
+4. If purchase ad is not ready: 广告还没准备好. Do not deduct coins.
+
+Optional **"+"** on the badge: same buy rule even when count > 0 (stockpile). Purchase of extra **does not** auto-use; only tap-on-empty auto-uses.
+
+New save: grant **1 of each** once (`starterPowerUpsGranted`) so the first uses need no ad.
+
+Cannot activate Tornado/Freeze if that type is already active, or if the run is over. Magnet with 0 remaining required candies: do not consume a charge.
+
+| Id | Name (ZH) | Buy cost (coins) | Also requires ad | Gameplay |
+| --- | --- | --- | --- | --- |
+| `magnet` | 磁铁 | 50 | Yes, on **buy** only | Auto-remove up to 3 remaining **required** candies. Counts as correct picks. |
+| `tornado` | 龙卷风 | 40 | Yes, on **buy** only | 4s lift / orbit so buried candies are tappable. |
+| `freeze` | 冰冻 | 35 | Yes, on **buy** only | 5s pause on the customer timer. Input still works. |
+
+### 9.1 Particle VFX (required)
+
+**Every power-up must play a dedicated particle effect. Silent activation is a bug.**
+
+| Power-up | Prefab | Look | Lifetime |
+| --- | --- | --- | --- |
+| Magnet | `Assets/Prefabs/VFX/Vfx_Magnet.prefab` | Cute sparkles + pink-red suction stars (not industrial metal filings) toward each pulled candy | Burst; destroy after particle lifetime |
+| Tornado | `Assets/Prefabs/VFX/Vfx_Tornado.prefab` | Pastel swirl, mint leaves / sugar dust, rounded wind ribbons around the pile | Loop for tornado duration, then stop |
+| Freeze | `Assets/Prefabs/VFX/Vfx_Freeze.prefab` | Soft ice crystals, snow-sparkle, baby-blue mist (kawaii frost, not blizzard horror) | Loop for freeze duration, then stop |
+
+VFX rules:
+
+- Unity Particle System, URP particles, mobile budget **≤ ~200 particles** per prefab.
+- `PowerUpDefinition.vfxPrefab` is required. Missing prefab → log error; still apply gameplay so the run is not soft-locked, but treat as a blocker before ship.
+- World space. Readable in 9:16.
+- Tornado/Freeze VFX stop in the same frame the gameplay effect ends (including Game Over).
+
+---
+
+## 10. Screens and UI (portrait)
+
+### 10.1 Boot
+
+Splash or empty camera. Load save. Apply orientation lock. Load Main Menu.
+
+### 10.2 Main Menu
+
+- Title: 糖果店
+- Buttons: 开始营业, 配方商店, 设置 (音乐 / 音效 / 振动)
+- Coins top-right
+- `历史最佳：服务 N 位客人`
+- Banner `今日配方` (see §8.1)
+- Sign-in popup when needed; streak as **7 dots**
+- Tutorial on first 开始营业 if `tutorialDone` is false (see §17)
+
+### 10.3 Recipe Shop
+
+- List of recipes: icon (catalog thumb), Chinese name, cost, 购买 / 已解锁
+- If this row is today’s featured candy: badge `今日配方`; if still locked, show **20% off** price (§8.1)
+- Locked rows slightly grey; scrollable; after buy, sparkle + persist
+- Back to Main Menu
+
+### 10.4 Game HUD (top → bottom, portrait)
+
+1. Top safe area: stars (3), coins, pause
+2. Customer queue strip (current highlighted)
+3. Order chips (icon + remaining number, never color-only). Punch the chip on a matching pick. Daily-challenge chip: featured icon + `n/12`.
+4. Center: 3D pile (largest region)
+5. Timer bar under the top cluster or above the pile
+6. Bottom thumb zone: 磁铁 / 龙卷风 / 冰冻 with **count badge**. Tap uses if count > 0. If 0, buy sheet (金币 + 看广告). Optional + to stockpile.
+7. Coin-insufficient sheet and serve-success chip (翻倍) — player-initiated only
+
+Pause: 继续, 放弃本局 (confirm: `真的要打烊吗？本局星星和进度会结束`), 音乐/音效/振动. Pause **freezes** the customer timer. Pause is not Freeze (no Freeze VFX).
+
+Timer starts after tutorial is dismissed on the first run.
+
+### 10.5 Game Over
+
+- 营业结束
+- `本局服务 {n} 位` / `赚到 {coins} 金币` / `历史最佳 {best}`；new best → `新纪录`
+- 回到主菜单
+- 看广告再试一次 (revive, hide if already used this run or ad not ready)
+- Do not auto-start any ad on this screen
+
+### 10.6 Feedback
+
+- Correct tap: candy flies to the matching chip, chip punch, light haptic; combo floating text `连击 xN` (visual only, no extra coins)
+- Wrong tap: camera or HUD shake, star decrement, medium haptic, candy still removed
+- Perfect serve (0 wrong this customer): +5 coins, stamp `完美`, restore **1 star** if below 3 (star-fill juice). The +5 is **not** doubled by the ad.
+- Serve: small pastel confetti (≤80 particles)
+- After 8s with no correct pick this customer: toast `找不到？用龙卷风翻一翻` (once per customer)
+- Not enough coins: button shake, then the insufficient-coins sheet (ad is opt-in)
+- World tap ignores HUD; pick the **front-most** candy under the finger
+- Finger drag > ~40px: not a pick
+
+---
+
+## 11. Audio (MVP placeholders)
+
+Optional clips; mute via settings. If clips are missing, ship silent rather than blocking.
+
+| Event | Intent |
+| --- | --- |
+| Correct tap | Soft pop |
+| Wrong tap | Error thud |
+| Serve customer | Register ding |
+| Game Over | Short downer |
+| Power-up | Match VFX (whoosh / ice / magnet) |
+| BGM | Light shop loop, duck on Game Over |
+
+---
+
+## 12. Save data (local JSON)
+
+Path: `Application.persistentDataPath/candy_shop_save.json`
+
+```json
+{
+  "schemaVersion": 1,
+  "coins": 0,
+  "unlockedRecipeIds": [],
+  "dailyStreak": 0,
+  "lastSignInDate": "",
+  "allRecipesBonusClaimed": false,
+  "adsWatchedDate": "",
+  "adsWatchedCountToday": 0,
+  "dailyCoinAdClaimedDate": "",
+  "magnetCount": 1,
+  "tornadoCount": 1,
+  "freezeCount": 1,
+  "starterPowerUpsGranted": true,
+  "tutorialDone": false,
+  "bestCustomersServed": 0,
+  "musicEnabled": true,
+  "sfxEnabled": true,
+  "hapticsEnabled": true,
+  "dailyChallengeDate": "",
+  "dailyChallengeTypeId": "",
+  "dailyChallengeYesterdayId": "",
+  "dailyChallengeProgress": 0,
+  "dailyChallengeClaimed": false
+}
+```
+
+Starter candy types are **not** stored as recipes; they are always unlocked in code.
+
+No cloud, no account.
+
+---
+
+## 13. Asset notes
+
+**2D generated art** must follow [Art Bible](2026-08-24-candy-shop-art-bible.md). Generate as a set, not one-off unrelated images. Prefer one atlas pass (same seed/style prompt) for icons.
+
+Folder `Candy/` currently contains Unity `.meta` files and two materials (`Waffer.mat`, `Chocolate.mat`). Expected binaries (`candy_kit.fbx` / `.glb`, textures `.png`, `terrain_kit`, `cloud_kit`) may be missing from git.
+
+OpenCode must:
+
+1. Confirm binaries exist on disk after Unity refresh.
+2. If missing, stop scene assembly and document the missing files; do not fake candies with cubes except as a **temporary** greybox tagged with the same `CandyTypeId` so systems can be tested.
+
+Move or copy imported kits into `Assets/Art/Candy/` if Unity requires assets under `Assets/`. Keep original `Candy/` as source if that is the artist drop folder; the plan covers the copy step.
+
+---
+
+## 14. Ads (reserved interface, light UX)
+
+MVP **does not** ship a live AdMob/Unity Ads SDK. OpenCode must still implement `IAdService` so a real network can be plugged in later without rewriting UI.
+
+**UX law (do not violate):**
+
+- Ads are **opt-in**. Player taps a clearly labeled button. Never auto-play on boot, on customer spawn, or between candy taps.
+- **No ads during picking** unless the player just tapped an ad/power-up sheet.
+- While a rewarded ad is showing: pause the customer timer (same as Pause). Resume only after success or cancel.
+- First run: hide **optional** ads (double, daily extra, revive, coin pack) until the player has finished **one** Game Over. **Power-up restock ads still show** when count is 0 — that buy is player-initiated and required.
+- If `IsReady` is false: hide or grey the ad button; do not show a broken “watch ad” that does nothing.
+- Editor / stub: simulate a 0.8s delay then `onCompleted(true)` so flows can be tested without a network.
+
+### 14.1 Interface
+
+```
+IAdService
+  bool IsReady(AdPlacement placement)
+  void ShowRewarded(AdPlacement placement, Action<bool> onRewarded)
+  void ShowInterstitial(AdPlacement placement, Action onClosed)
+```
+
+`StubAdService` is the MVP implementation. `AdMobAdService` (or similar) is out of MVP; keep the interface.
+
+`AdPlacement` enum / ids:
+
+| Id | Scene | Reward if completed |
+| --- | --- | --- |
+| `reward_coins` | Recipe shop and power-up / insufficient-coins **sheets** only (no always-on ad button on the pile HUD) | **+80 coins** |
+| `reward_double_serve` | After a successful customer | Add **the same coin amount again** for that customer only |
+| `reward_powerup_buy_magnet` | Buy sheet when restocking Magnet | Completes the purchase (with coins already deducted). **Does not** grant a free use by itself |
+| `reward_powerup_buy_tornado` | Buy sheet when restocking Tornado | Same |
+| `reward_powerup_buy_freeze` | Buy sheet when restocking Freeze | Same |
+| `reward_daily_extra` | Sign-in popup | **+50 coins**, once per local date |
+| `reward_revive` | Game Over | Restore **1 star**; if fail was timeout, restore that customer's remaining order and full timer; if fail was 0 stars, set stars to 1 and keep current order. Resume the run. Once per run |
+| `interstitial_after_run` | After Game Over → Main Menu | None. **Disabled by default** (`AdConfig.interstitialEnabled = false`) |
+
+### 14.2 Frequency caps (`AdConfig`)
+
+| Cap | Default | Why |
+| --- | --- | --- |
+| Min seconds between optional rewarded ads | 45 | Does **not** apply to `reward_powerup_buy_*` (player already paid) |
+| Max optional rewarded ads per local date | 8 | Coin pack / double / daily / revive. **Power-up buy ads have a separate cap** |
+| Max `reward_powerup_buy_*` per date (all types summed) | 6 | Restock ceiling |
+| Max `reward_coins` per date | 4 | Coin printer |
+| Max `reward_double_serve` per run | 3 | Not every customer |
+| Max revive per run | 1 | Forgiveness, not infinite |
+| `reward_daily_extra` | 1 per date | On top of free 200 |
+| Interstitial | off | Do not interrupt |
+
+If a cap is hit, hide the button. Do not nag.
+
+Coin grant from ads still goes through `EconomyManager` and is saved immediately.
+
+### 14.3 Required placements (player-requested)
+
+1. **Coins not enough** — sheet, not a full-screen takeover. Watching grants +80. Player then taps Buy again if they still want the item.
+2. **Success double** — after each served customer, chip: `+N` + **看广告翻倍**. Auto-continue to the next customer in **2.5s** if ignored. Does not block tapping if they already skipped. After 3 doubles this run, hide 翻倍.
+3. **Power-up restock** — when count is 0, **coins AND rewarded ad**. Using while count > 0 has no ad and no extra cost.
+
+### 14.4 Extra placements (allowed, still light)
+
+4. **Daily extra +50** on the sign-in panel only.
+5. **Revive once** on Game Over (看广告再试一次). Not on Pause. Not after 放弃本局 confirm.
+
+Do **not** add: ads on every use when count > 0, ads when opening the recipe list, ads on pause, unskippable interstitials between customers, rewarded ads that unlock recipes for free, “watch ad to use for free”.
+
+### 14.5 Copy (ZH)
+
+- 购买并观看广告
+- 购买需扣金币并看广告
+- 看广告获得 80 金币
+- 看广告翻倍
+- 看广告再领 50 金币
+- 看广告再试一次
+- 广告还没准备好
+- 已退还金币
+
+---
+
+## 15. Out of MVP (do not build now)
+
+- iOS / iPhone / App Store
+- Landscape
+- Multiplayer / leaderboards / IAP
+- Live AdMob / Unity Ads SDK (stub + `IAdService` **is** in MVP)
+- Interstitials (interface reserved, flag off)
+- Cloud save
+- Walking 3D customers with full animation set
+- More than the three specified power-ups
+- Combo **coin** multiplier beyond speed-bonus (visual 连击 is in MVP)
+- Narrative / dialogue trees
+
+---
+
+## 16. Acceptance (product)
+
+A build is MVP-complete when:
+
+1. Unity **6000.0.77f1**, Android portrait-only on device or editor Game view 1080x1920. No iOS build target.
+2. A run can serve several customers, fail on stars or timer, and persist coins.
+3. Wrong candy removes the object and deducts exactly one star.
+4. Daily 200 / streak-7 recipe / all-unlocked 500 behave as specified.
+5. All three power-ups work and each shows its particle VFX.
+6. Recipe shop lists every non-starter candy from the imported kit (1 mesh = 1 recipe); unlocks then appear in later orders.
+7. UI copy is Chinese; comments in code are English.
+8. All 2D UI, icons, customer portraits, and particles match the cartoon-cute art bible (same palette, outlines, kawaii shapes). Mixed or realistic assets fail review.
+9. `IAdService` + stub: insufficient coins → opt-in +80; serve success → opt-in double; **restock power-up = coins AND ad**; **use is free if count > 0**; no auto-play during picking.
+10. Tutorial once; front-most pick; UI blocks world taps; perfect serve **+5 coins and +1 star (cap 3)**; daily featured-recipe challenge 12/12; best-serve on menu; haptics toggle. See also [supplements](2026-08-24-candy-shop-supplements.md) §1.
+
+---
+
+## 17. Extra UX (MVP)
+
+Ship [supplements](2026-08-24-candy-shop-supplements.md) **§1** only. Do not ship §2 backlog.
+
+- First-run 3-card tutorial; timer starts after dismiss.
+- Raycast front-most candy; HUD eats taps; drag is not a pick.
+- Buried hint toast once per customer after 8s without a correct pick.
+- Visual combo only; perfect serve +5 coins **and +1 star if below 3**; serve confetti.
+- Daily featured-recipe challenge (§8.1): 12 correct picks, 70% order bias if unlocked, 20% off if locked, reward 120 coins + 1 Freeze.
+- Main menu best score + 7-day streak dots + 今日配方 banner; settings 音乐/音效/振动.
+- Subtle pile idle jiggle; low-time vignette under 5s.
+- Recipe unlock toast `新糖果上架` next run.
+- Game Over shows 本局 / 历史最佳 / 新纪录.
+

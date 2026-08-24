@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 919e9a25556cf984b953cb5a27c87200, type: 3}
+  m_Name: EconomyConfig
+  m_EditorClassIdentifier: 
+  baseReward: 8
+  perCandy: 1
+  speedBonusMax: 24
+  minReward: 10
+  perfectBonus: 5
+  dailyCoins: 200
+  streakRecipeDay: 7
+  allUnlockedBonus: 500
+  dailyExtraAdCoins: 50
+  recipeBaseCost: 120
+  recipeCostStep: 60
+  adCoinGrant: 80

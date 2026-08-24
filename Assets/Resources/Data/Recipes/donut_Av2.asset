@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3842d8f7a6acfed43b5b5473d11f0232, type: 3}
+  m_Name: donut_Av2
+  m_EditorClassIdentifier: 
+  recipeId: donut_Av2
+  candyType: {fileID: 11400000, guid: da17bffbe4421c54da29b225dd90d177, type: 2}
+  cost: 1380

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/BootScene.unity
+    guid: a6ed2ffb8bc5c8c4ab5a9e3590c2c1a6
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 3fc838a921c0a474f80df18cba5b77e4
+  - enabled: 1
+    path: Assets/Scenes/GameScene.unity
+    guid: 94369a6f80c733044b3ba316094a17cc
+  - enabled: 1
+    path: Assets/Scenes/RecipeShopScene.unity
+    guid: a8d1e97f0845b4c4c919e6250b5fa995
+  m_configObjects: {}
+  m_UseUCBPForAssetBundles: 0

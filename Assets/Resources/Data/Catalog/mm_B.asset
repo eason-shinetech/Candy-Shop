@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
+  m_Name: mm_B
+  m_EditorClassIdentifier: 
+  typeId: mm_B
+  displayNameZh: "\u5DE7\u514B\u529B\u8C46"
+  prefab: {fileID: 3651232832943400133, guid: 99382614f56541b4f8c393cf350aa20d, type: 3}
+  isStarter: 0
+  icon: {fileID: 0}
+  chipColor: {r: 0.49411765, g: 0.8784314, b: 0.7764706, a: 1}

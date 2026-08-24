@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07cdde84b6820a440b1c4698b80ea250, type: 3}
+  m_Name: CustomerOrderConfig
+  m_EditorClassIdentifier: 
+  baseSeconds: 6
+  secondsPerCandy: 1.15
+  minSeconds: 10
+  maxSeconds: 45
+  minTypes: 1
+  maxTypes: 3
+  minTotal: 6
+  maxTotal: 30
+  scaleEveryCustomers: 5
+  waitingCount: 2
+  targetInstancesPerType: 12
+  buriedHintSeconds: 8
+  doubleRewardAutoContinueSeconds: 2.5
+  freezeDurationSeconds: 5
+  tornadoDurationSeconds: 4
+  magnetMaxPicks: 3
