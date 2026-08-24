@@ -128,7 +128,7 @@ Save under `Assets/Art/UI/Customers/`.
 - [ ] Same pastel saturation (not one neon icon next to a desaturated one)
 - [ ] Transparent PNG icons, no random white boxes
 - [ ] Readable at 72px on a phone
-- [ ] No English/Chinese baked into the image except if the spec asked for it (MVP: **no baked text**; Unity TextMeshPro draws Chinese)
+- [ ] No English/Chinese baked into the image (MVP: **no baked text**; TMP + i18n draws zh/en)
 - [ ] Power-up VFX colors match Magnet Red / Wind / Ice
 - [ ] Menu background and game HUD panels look like the same shop
 

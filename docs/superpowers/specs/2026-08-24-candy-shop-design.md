@@ -6,7 +6,7 @@
 **Platform:** Android only (no iOS), **portrait only**  
 **Input:** Touch tap (no mouse-only desktop layout required)  
 **Persistence:** Local device only (JSON file, not PlayerPrefs for the full save blob)  
-**Language of UI copy:** Chinese  
+**Language of UI copy:** **Chinese (`zh`) and English (`en`)**. See [i18n](2026-08-24-candy-shop-i18n.md).  
 **Language of code comments:** English
 
 This document is the source of truth for gameplay rules. The implementation plan describes file layout and task order. Do not change these rules without updating this spec.
@@ -136,7 +136,7 @@ If FBX/GLB binaries are missing, stop and list missing files. Do not keep the ol
 - **Exactly 3 starters**, always free. Default: first 3 candy meshes in sorted name order. If `Chocolate` and `Waffer` meshes exist, prefer those two plus the first remaining mesh as the 3 starters (still exactly 3).
 - **Every other candy mesh = one shop recipe** that unlocks that type.
 - Orders may only request **unlocked** types (starters + bought recipes).
-- Display names: Chinese. If the mesh name is English (`CandyCane_Red`), map in the catalog table; do not show raw FBX names in UI.
+- Display names: **zh and en** on each catalog row (i18n). Do not show raw FBX names in UI.
 
 ### 4.3 Recipe prices
 
@@ -372,6 +372,8 @@ VFX rules:
 
 ## 10. Screens and UI (portrait)
 
+**Look:** cartoon-cute (art bible) + Impeccable hierarchy (no AI-SaaS slop). OpenCode must read `PRODUCT.md`, `DESIGN.md`, [Unity UI + Impeccable](2026-08-24-candy-shop-ui-impeccable.md), and [Unity plugins](2026-08-24-candy-shop-unity-plugins.md) before building Canvases. Use uGUI + TMP. **UI Effect** for button/panel motion. **Tutorial Spotlight** for first-run holes. Do not run `npx impeccable detect` on Unity assets.
+
 ### 10.1 Boot
 
 Splash or empty camera. Load save. Apply orientation lock. Load Main Menu.
@@ -379,16 +381,17 @@ Splash or empty camera. Load save. Apply orientation lock. Load Main Menu.
 ### 10.2 Main Menu
 
 - Title: 糖果店
-- Buttons: 开始营业, 配方商店, 设置 (音乐 / 音效 / 振动)
+- Buttons: 开始营业 / Open Shop, 配方商店 / Recipes, 设置 / Settings (音乐·Music / 音效·Sound / 振动·Vibration / **语言 Language**)
+- All labels from [i18n table](2026-08-24-candy-shop-i18n.md), not hardcoded.
 - Coins top-right
 - `历史最佳：服务 N 位客人`
 - Banner `今日配方` (see §8.1)
 - Sign-in popup when needed; streak as **7 dots**
-- Tutorial on first 开始营业 if `tutorialDone` is false (see §17)
+- Tutorial on first 开始营业 if `tutorialDone` is false — **Tutorial Spotlight** (see plugins spec §2), not a homemade overlay
 
 ### 10.3 Recipe Shop
 
-- List of recipes: icon (catalog thumb), Chinese name, cost, 购买 / 已解锁
+- List of recipes: icon (catalog thumb), **localized** name, cost, 购买·Buy / 已解锁·Unlocked
 - If this row is today’s featured candy: badge `今日配方`; if still locked, show **20% off** price (§8.1)
 - Locked rows slightly grey; scrollable; after buy, sparkle + persist
 - Back to Main Menu
@@ -467,6 +470,7 @@ Path: `Application.persistentDataPath/candy_shop_save.json`
   "musicEnabled": true,
   "sfxEnabled": true,
   "hapticsEnabled": true,
+  "language": "zh",
   "dailyChallengeDate": "",
   "dailyChallengeTypeId": "",
   "dailyChallengeYesterdayId": "",
@@ -563,16 +567,9 @@ Coin grant from ads still goes through `EconomyManager` and is saved immediately
 
 Do **not** add: ads on every use when count > 0, ads when opening the recipe list, ads on pause, unskippable interstitials between customers, rewarded ads that unlock recipes for free, “watch ad to use for free”.
 
-### 14.5 Copy (ZH)
+### 14.5 Copy
 
-- 购买并观看广告
-- 购买需扣金币并看广告
-- 看广告获得 80 金币
-- 看广告翻倍
-- 看广告再领 50 金币
-- 看广告再试一次
-- 广告还没准备好
-- 已退还金币
+Use i18n keys (`ad_buy_cta`, `ad_double`, …). zh/en in [i18n spec](2026-08-24-candy-shop-i18n.md). Do not hardcode.
 
 ---
 
@@ -601,7 +598,7 @@ A build is MVP-complete when:
 4. Daily 200 / streak-7 recipe / all-unlocked 500 behave as specified.
 5. All three power-ups work and each shows its particle VFX.
 6. Recipe shop lists every non-starter candy from the imported kit (1 mesh = 1 recipe); unlocks then appear in later orders.
-7. UI copy is Chinese; comments in code are English.
+7. UI copy is **zh and en** (i18n table + language toggle); comments in code are English.
 8. All 2D UI, icons, customer portraits, and particles match the cartoon-cute art bible (same palette, outlines, kawaii shapes). Mixed or realistic assets fail review.
 9. `IAdService` + stub: insufficient coins → opt-in +80; serve success → opt-in double; **restock power-up = coins AND ad**; **use is free if count > 0**; no auto-play during picking.
 10. Tutorial once; front-most pick; UI blocks world taps; perfect serve **+5 coins and +1 star (cap 3)**; daily featured-recipe challenge 12/12; best-serve on menu; haptics toggle. See also [supplements](2026-08-24-candy-shop-supplements.md) §1.
@@ -612,12 +609,13 @@ A build is MVP-complete when:
 
 Ship [supplements](2026-08-24-candy-shop-supplements.md) **§1** only. Do not ship §2 backlog.
 
-- First-run 3-card tutorial; timer starts after dismiss.
+- First-run **Tutorial Spotlight** (3 holes); timer starts after dismiss.
 - Raycast front-most candy; HUD eats taps; drag is not a pick.
 - Buried hint toast once per customer after 8s without a correct pick.
 - Visual combo only; perfect serve +5 coins **and +1 star if below 3**; serve confetti.
 - Daily featured-recipe challenge (§8.1): 12 correct picks, 70% order bias if unlocked, 20% off if locked, reward 120 coins + 1 Freeze.
-- Main menu best score + 7-day streak dots + 今日配方 banner; settings 音乐/音效/振动.
+- Main menu best score + 7-day streak dots + 今日配方 banner; settings 音乐/音效/振动/**语言**.
+- **zh / en** i18n ([i18n spec](2026-08-24-candy-shop-i18n.md)); toggle applies immediately.
 - Subtle pile idle jiggle; low-time vignette under 5s.
 - Recipe unlock toast `新糖果上架` next run.
 - Game Over shows 本局 / 历史最佳 / 新纪录.

@@ -6,17 +6,18 @@
 
 **Architecture:** ScriptableObject data + scene MonoBehaviours. Save is one JSON file. Power-ups always play particle VFX. UI and generated images follow the art bible.
 
-**Tech stack:** Unity **6000.0.77f1**, URP 3D, Android player, Input System or `Input.GetTouch` + UI raycasts, TextMeshPro (Chinese), local JSON.
+**Tech stack:** Unity **6000.0.77f1**, URP 3D, Android player, Input System or `Input.GetTouch` + UI raycasts, TextMeshPro (zh + en), local JSON.
 
 **Read first:**
 
 - [Game Design Spec](../specs/2026-08-24-candy-shop-design.md)
 - [Art Bible](../specs/2026-08-24-candy-shop-art-bible.md)
+- [i18n zh/en](../specs/2026-08-24-candy-shop-i18n.md)
 
 ## Global constraints
 
 - **Unity Editor = 6000.0.77f1** (`C:\Program Files\Unity\Hub\Editor\6000.0.77f1\`). Do not use another version. 3D URP, **Android only** (do not install or configure iOS), touch, **portrait only**.
-- UI copy in **Chinese**. All **code comments in English**.
+- UI copy in **zh and en** ([i18n spec](../specs/2026-08-24-candy-shop-i18n.md)). All **code comments in English**.
 - Style: **卡通可爱风**. Every generated image uses the art-bible prompt prefix. No mixed styles.
 - Power-ups Magnet / Tornado / Freeze each have a particle prefab; silent use is a bug.
 - Wrong candy: remove object, minus 1 star. 3 stars. Timer 0 or 0 stars = Game Over.
@@ -50,10 +51,15 @@ Assets/Scripts/Ads/IAdService.cs
 Assets/Scripts/Ads/StubAdService.cs
 Assets/Scripts/Ads/AdPlacement.cs
 Assets/ScriptableObjects/AdConfig.cs
+Assets/Scripts/I18n/I18nService.cs
+Assets/I18n/strings_zh.json
+Assets/I18n/strings_en.json
 Assets/Scripts/UI/GameHUDController.cs
 Assets/Scripts/UI/MainMenuController.cs
 Assets/Scripts/UI/RecipeShopController.cs
 Assets/Scripts/UI/SafeAreaFitter.cs
+Assets/Scripts/UI/UiEffectPlayer.cs
+Assets/Scripts/UI/FirstRunTutorialDriver.cs
 Assets/ScriptableObjects/CandyTypeDefinition.cs
 Assets/ScriptableObjects/RecipeDefinition.cs
 Assets/ScriptableObjects/PowerUpDefinition.cs
@@ -85,7 +91,7 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 ### Task 2: Art pass (style-locked 2D)
 
 - Generate all files in the art bible **in one batch** with the same prompt prefix and palette.
-- Import as UI sprites. No baked Chinese/English in PNGs (TMP draws text).
+- Import as UI sprites. No baked Chinese/English in PNGs (TMP + i18n draws text).
 - Reject any asset that looks realistic or from another style.
 
 **Done when:** Main menu background + HUD icons + **one thumb per catalog candy** + 6 portraits sit in `Assets/Art/UI` and look like one kit.
@@ -131,8 +137,11 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 
 ### Task 7: HUD / menus polish
 
-- Chinese copy from spec (开始营业, 配方商店, 营业结束, etc.).
+- Chinese **and English** copy from [i18n](../specs/2026-08-24-candy-shop-i18n.md). Language toggle in Settings. `I18nService` + both JSON files. TMP CJK fallback.
 - Thumb-zone power-up buttons. Cookie-like panels from art bible.
+- Apply [Impeccable Unity adapter](../specs/2026-08-24-candy-shop-ui-impeccable.md) and root `DESIGN.md` (TMP rounded CJK, 8px grid, no nested cards, no Arial/Inter, no bounce easing).
+- Import **UI Effect** (git UPM) and **Tutorial Spotlight** (Asset Store 363804). First-run uses `TutorialSpotlightManager`; buttons/panels use UI Effect. See [plugins](../specs/2026-08-24-candy-shop-unity-plugins.md).
+- Optional: `npx impeccable install --providers=opencode` so later UI passes use `/impeccable polish` on **Game-view screenshots**, not HTML.
 - Pause freezes timer without Freeze VFX.
 - Ship [supplements](../specs/2026-08-24-candy-shop-supplements.md) **§1**: tutorial, front-most pick, buried hint, perfect **star restore**, daily 今日配方, visual combo, best score, haptics, confetti, 7-dot streak.
 - Do **not** build supplements §2 backlog.
@@ -160,4 +169,4 @@ iOS, landscape, IAP, live AdMob SDK (stub is in scope), cloud save, extra power-
 
 ## OpenCode working rule
 
-If the spec and this plan disagree, **the spec wins**. If art and a generated image disagree, **the art bible wins**. Tune numbers only via ScriptableObjects, not hardcoded magic, unless the spec gave a constant (e.g. daily 200).
+If the spec and this plan disagree, **the spec wins**. If art and a generated image disagree, **the art bible wins**. If Impeccable generic defaults fight the candy shop, **art bible + DESIGN.md win**. UI motion = **UI Effect**; first-run tutorial = **Tutorial Spotlight**. Tune numbers only via ScriptableObjects, not hardcoded magic, unless the spec gave a constant (e.g. daily 200).

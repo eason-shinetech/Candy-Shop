@@ -18,15 +18,15 @@ These keep the core loop (tap pile → serve → coins) and only add clarity, fa
 - If the finger moves more than ~40px before up, treat as not a pick (scroll-safe even if the camera is fixed).
 - Buried candy: after **8s with no correct pick** this customer, show a one-line toast: `找不到？用龙卷风翻一翻` (once per customer). Not an ad. Hide if they have 0 tornado and 0 coins to restock — still show, so they learn the verb.
 
-### 1.2 First-run tutorial (once)
+### 1.2 First-run tutorial (once) — Tutorial Spotlight
 
-Three cards, portrait, skip 跳过 on 2 and 3. Save `tutorialDone`.
+Use **[Tutorial Spotlight](https://assetstore.unity.com/packages/tools/gui/tutorial-spotlight-363804)** (`TutorialSpotlightManager.ShowSpotlight` / `HideSpotlight` / `SetSpotlightTarget`). Dark overlay + hole; taps only through the hole. Do not ship a custom fullscreen mask.
 
-1. `客人要的糖，点堆里的就可以` (point at order chips + pile)
-2. `点错会扣星星；完美接待可以补回一颗（最多三颗）`
-3. `道具有库存就能用；没了要花金币并看广告补充`
+Three steps, skip 跳过 on 2 and 3. Save `tutorialDone`. Timer starts **after** the last step (or skip). Full targeting table: [Unity plugins](2026-08-24-candy-shop-unity-plugins.md) §2.
 
-Do not block the first customer for more than these cards. Timer starts **after** card 3 is dismissed.
+1. `客人要的糖，点堆里的就可以` (hole: order chips + pile hotspot)
+2. `点错会扣星星；完美接待可以补回一颗（最多三颗）` (hole: stars)
+3. `道具有库存就能用；没了要花金币并看广告补充` (hole: power-up row)
 
 ### 1.3 Serve juice
 
@@ -50,7 +50,7 @@ Full rules: main spec **§8.1**. Quota 12 correct picks, 70% order bias when unl
 
 ### 1.5 Recipe shop UX
 
-- Row: icon (catalog thumb), Chinese name, cost, 购买 / 已解锁
+- Row: icon (catalog thumb), localized name, cost, 购买 / Buy / 已解锁 / Unlocked
 - Locked rows slightly grey, still readable
 - Scroll on portrait; do not shrink text below 28px
 - After purchase, play a short icing sparkle on that row
