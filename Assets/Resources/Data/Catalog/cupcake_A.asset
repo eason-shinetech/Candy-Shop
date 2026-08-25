@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
-  m_Name: cupcake_A
+  m_Name: cupcake_a
   m_EditorClassIdentifier: 
-  typeId: cupcake_A
+  typeId: cupcake_a
   displayNameZh: "\u676F\u5B50\u86CB\u7CD5\u7CD6"
   displayNameEn: Cupcake
-  prefab: {fileID: 7225139568036256180, guid: 71e845702c0fa024c9ce224729384517, type: 3}
+  prefab: {fileID: 4261575292002413700, guid: 9f6b7030123964949bf9e8a036d73ff5, type: 3}
   isStarter: 0
   isSpecial: 0
-  icon: {fileID: 0}
-  chipColor: {r: 0.78431374, g: 0.9607843, b: 0.83137256, a: 1}
+  icon: {fileID: 21300000, guid: f356f33ce68b74b4fae6cbcb100a65ab, type: 3}
+  chipColor: {r: 0.49411765, g: 0.8784314, b: 0.7764706, a: 1}

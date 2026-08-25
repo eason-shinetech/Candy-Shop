@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3842d8f7a6acfed43b5b5473d11f0232, type: 3}
+  m_Name: popsicle_b3
+  m_EditorClassIdentifier: 
+  recipeId: popsicle_b3
+  candyType: {fileID: 11400000, guid: f250fec8b51f7324cb669e4b1789094f, type: 2}
+  cost: 10000
+  starRank: 5
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

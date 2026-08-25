@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
-  m_Name: cupcake_A_special
+  m_Name: cupcake_a_special
   m_EditorClassIdentifier: 
-  typeId: cupcake_A_special
+  typeId: cupcake_a_special
   displayNameZh: "\u676F\u5B50\u86CB\u7CD5\u7CD6\u8461\u8404\u7279\u522B\u7248"
   displayNameEn: Cupcake Grape Special
-  prefab: {fileID: 4296077228274319489, guid: 9689e2f726fb9d14190b1ff6d7f3b6a1, type: 3}
+  prefab: {fileID: 2174787271840746728, guid: 56c96c2e9c7be4d4c91b393c56272463, type: 3}
   isStarter: 0
   isSpecial: 1
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f356f33ce68b74b4fae6cbcb100a65ab, type: 3}
   chipColor: {r: 0.72, g: 0.6, b: 1, a: 1}

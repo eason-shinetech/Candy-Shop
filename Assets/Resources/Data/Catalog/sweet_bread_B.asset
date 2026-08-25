@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
-  m_Name: sweet_bread_B
+  m_Name: sweet_bread_b
   m_EditorClassIdentifier: 
-  typeId: sweet_bread_B
+  typeId: sweet_bread_b
   displayNameZh: "\u751C\u9762\u5305\u7CD6"
   displayNameEn: Sweet Bread
-  prefab: {fileID: 8639316314710087850, guid: acbaf9ffb251e944da0d37c92850da14, type: 3}
+  prefab: {fileID: 3301454014829956072, guid: 186e25a21fa53684e8a801c80f6596ea, type: 3}
   isStarter: 0
   isSpecial: 0
-  icon: {fileID: 0}
-  chipColor: {r: 0.49411765, g: 0.8784314, b: 0.7764706, a: 1}
+  icon: {fileID: 21300000, guid: ba76245999dbe4c46b624c273450560b, type: 3}
+  chipColor: {r: 1, g: 0.8784314, b: 0.47843137, a: 1}

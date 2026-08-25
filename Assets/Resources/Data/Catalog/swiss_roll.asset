@@ -15,8 +15,8 @@ MonoBehaviour:
   typeId: swiss_roll
   displayNameZh: "\u745E\u58EB\u5377\u7CD6"
   displayNameEn: Swiss Roll
-  prefab: {fileID: 3428932983681218094, guid: 292e26aa7897acc4b9c7cb83f6ac4101, type: 3}
+  prefab: {fileID: 9074086366600951546, guid: 8a75720658468634db65b422522c7c1a, type: 3}
   isStarter: 0
   isSpecial: 0
-  icon: {fileID: 0}
-  chipColor: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}
+  icon: {fileID: 21300000, guid: 6b777a67008a12e4c831788a66e6cb94, type: 3}
+  chipColor: {r: 0.78431374, g: 0.9607843, b: 0.83137256, a: 1}

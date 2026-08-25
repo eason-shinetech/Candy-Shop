@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
-  m_Name: mm_B
+  m_Name: mm_b
   m_EditorClassIdentifier: 
-  typeId: mm_B
+  typeId: mm_b
   displayNameZh: "\u5DE7\u514B\u529B\u8C46"
   displayNameEn: Choco Bean
-  prefab: {fileID: 3274277498491220505, guid: 99382614f56541b4f8c393cf350aa20d, type: 3}
+  prefab: {fileID: 3826022984686171338, guid: dafdd8860c805c14cada40b24f864182, type: 3}
   isStarter: 0
   isSpecial: 0
-  icon: {fileID: 0}
-  chipColor: {r: 0.49411765, g: 0.8784314, b: 0.7764706, a: 1}
+  icon: {fileID: 21300000, guid: b445cf7d7333f96478282b61e15c0185, type: 3}
+  chipColor: {r: 1, g: 0.8784314, b: 0.47843137, a: 1}

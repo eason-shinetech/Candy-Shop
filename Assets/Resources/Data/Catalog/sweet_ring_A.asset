@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
-  m_Name: sweet_ring_A
+  m_Name: sweet_ring_a
   m_EditorClassIdentifier: 
-  typeId: sweet_ring_A
+  typeId: sweet_ring_a
   displayNameZh: "\u5708\u5708\u7CD6"
   displayNameEn: Ring Candy
-  prefab: {fileID: 99169017139642739, guid: 526d4b3a7fed37f489edd63f2f3a5b11, type: 3}
+  prefab: {fileID: 214695745265858650, guid: caca27c92b2bf614cba16b17168d3fba, type: 3}
   isStarter: 0
   isSpecial: 0
-  icon: {fileID: 0}
-  chipColor: {r: 1, g: 0.8784314, b: 0.47843137, a: 1}
+  icon: {fileID: 21300000, guid: 2adf71893ba5c7f4faefff203c88ae67, type: 3}
+  chipColor: {r: 0.654902, g: 0.54509807, b: 0.98039216, a: 1}

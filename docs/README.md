@@ -20,7 +20,8 @@ Cursor owns **design and plan documents**. OpenCode owns **Unity implementation*
 - All C# comments must be English.
 - UI is **zh + en** ([i18n](superpowers/specs/2026-08-24-candy-shop-i18n.md)). No hardcoded player-facing strings.
 - Do not invent conflicting game rules. If a number is missing, use the spec defaults and keep it data-driven (ScriptableObject).
-- Candy models live under `Candy/` (currently meta files are present; confirm binaries exist before scene assembly).
+- Candy types follow the Art/Candy kit prefabs: one playable prefab under `Assets/Prefabs/Candy` = one `CandyTypeId` (scenery props excluded by name). `Assets/Art/Candy` is the 3D kit those prefabs come from — do not invent types from a handmade list, and do not re-parse `candy_kit.fbx` independently of the prefabs.
+- Candy UI icons (order chips, recipe rows, thumbs) follow `Assets/Art/Candy Icon`: one PNG per type, filename = prefab name (e.g. `Chocolate Bar.prefab` → `Chocolate Bar.png`). Do not treat generated `Resources/UI/Candies/icon_candy_*` or family fallbacks as the source of truth. Scenery in that folder (`Stick`, `Icecream Plate`, `Lollipop Ground *`) is not a catalog thumb.
 - Visual style is **卡通可爱风**. Prefix every image-generation prompt with the art-bible block. Do not mix styles.
 - Unity UI: follow [Impeccable adapter](superpowers/specs/2026-08-24-candy-shop-ui-impeccable.md) + root `PRODUCT.md` / `DESIGN.md`. Art bible wins over generic Impeccable SaaS looks.
 - UI motion: [UI Effect](https://github.com/mob-sakai/UIEffect). First-run tutorial: [Tutorial Spotlight](https://assetstore.unity.com/packages/tools/gui/tutorial-spotlight-363804). Do not write a custom dim overlay.

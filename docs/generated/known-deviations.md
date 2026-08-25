@@ -27,3 +27,17 @@ Date: 2026-08-25 (supplements 2.0 implementation pass)
 4. **Pile budget.** Restock fills only the current order's candy types, hard-capped at `CandyPileRestock.maxTotalInstances` (420) so late-game (70 recipes owned) cannot spawn ~850 objects on mobile.
 
 5. **Ads pause the timer.** The power-up buy sheet (and its rewarded ad) opens with the customer timer paused and resumes on close/success/cancel, per spec §14.
+
+6. **Candy catalog sourced from Art/Candy prefabs, not the FBX mesh list (2026-08-25).**
+   - Candy types follow the Art/Candy kit prefabs: one playable prefab under `Assets/Prefabs/Candy` = one `CandyTypeId`. `Assets/Art/Candy` holds the 3D kit (FBX/GLB + textures); it is not enumerated for the catalog. `CandyShopBootstrapper.BuildCandyCatalog` enumerates the prefabs directly and no longer parses `candy_kit.fbx` meshes or re-extracts prefabs from them.
+   - The bootstrap no longer wipes `Assets/Prefabs/Candy` (it is data, not generated output). Only `Resources/Data/Catalog` and `Resources/Data/Recipes` are regenerated.
+   - TypeIds derive from sanitized prefab file names, lowercased with `_` separators (e.g. `Chocolate Bar` → `chocolate_bar`, `Milk Shake A` → `milk_shake_a`, `MM A` → `mm_a`). Old FBX-mesh-based ids are retired; existing save data falls back to the new catalog automatically.
+   - Scenery props in the folder are excluded by name keyword (`fence`, `plate`, `ground`, `sign`, `stick`, `melted`), covering `Icecream Plate`, `Lollipop Ground 1-3` and `Stick`. Result: 66 candy types.
+   - Special-edition plan baseIds updated to the new ids: `lollipop_a1`, `donut_a1`, `cupcake_a`, `icecream_a1`, `cookie_a`, `jelly`, `milk_shake_a`, `small_cake`.
+   - zh/en name maps extended for space-containing prefab names (`milk shake`, `cotton candy`, `swiss roll`, `sweet bread`, `sandwish`, `mm`).
+   - All 67 prefabs in the folder were also cleaned of Missing Script components (orphan script GUID `99f53f2bcb7a54a4b925312729e0cd35`) so the catalog loads valid prefabs only.
+
+7. **Candy icons sourced from `Assets/Art/Candy Icon` (2026-08-25).**
+   - Each catalog candy uses the PNG whose filename matches its prefab name (e.g. `Chocolate Bar.png` for `Chocolate Bar.prefab`). This folder is the source of truth for order-chip / recipe-row / thumb art.
+   - Do not treat generated `Resources/UI/Candies/icon_candy_*` or family-name fallbacks in `UIKit.CandyIconPath` as canonical.
+   - Scenery in the same folder (`Stick`, `Icecream Plate`, `Lollipop Ground *`) is not a catalog thumb.

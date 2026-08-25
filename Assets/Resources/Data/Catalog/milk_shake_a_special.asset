@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
+  m_Name: milk_shake_a_special
+  m_EditorClassIdentifier: 
+  typeId: milk_shake_a_special
+  displayNameZh: "\u5976\u6614\u7CD6\u53EF\u53EF\u7279\u522B\u7248"
+  displayNameEn: Milkshake Cocoa Special
+  prefab: {fileID: 1923532014594581165, guid: 631ea57736b58cc48a8c13f0ae948c64, type: 3}
+  isStarter: 0
+  isSpecial: 1
+  icon: {fileID: 21300000, guid: 89d7472890bbc9742b81ea2a3597011a, type: 3}
+  chipColor: {r: 0.75, g: 0.58, b: 0.45, a: 1}

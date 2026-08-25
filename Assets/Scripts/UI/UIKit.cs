@@ -1,10 +1,9 @@
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.UI;
 
 namespace CandyShop
 {
-    // Shared UI helpers: art-bible palette, cartoon sprites from Resources/UI, rounded widgets.
+    // Shared UI constants and lookups only. Layout lives in prefabs under
+    // Assets/Prefabs/UI — nothing in here may create GameObjects.
     public static class UIKit
     {
         // Palette (design spec section 2.1)
@@ -19,22 +18,10 @@ namespace CandyShop
         public static readonly Color MagnetRed = FromHex("FF6B6B");
         public static readonly Color Wind = FromHex("C8F5D4");
 
-        private static Font _font;
-
-        public static Font DefaultFont
-        {
-            get
-            {
-                if (_font == null)
-                {
-                    _font = Font.CreateDynamicFontFromOSFont(
-                        new[] { "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "SimHei", "Arial" }, 32);
-                    if (_font == null)
-                        _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                }
-                return _font;
-            }
-        }
+        // Art-bible sprite names under Resources/UI (9-slice imports).
+        public const string PanelSprite = "panel_cream";
+        public const string ButtonPrimary = "btn_primary";
+        public const string ButtonSecondary = "btn_secondary";
 
         public static Color FromHex(string hex)
         {
@@ -45,25 +32,6 @@ namespace CandyShop
             return new Color32(r, g, b, 255);
         }
 
-        // ---- Canvas ----
-
-        public static Canvas CreateCanvas(Transform parent, string name)
-        {
-            var root = new GameObject(name, typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            root.transform.SetParent(parent, false);
-            var canvas = root.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = root.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
-            scaler.matchWidthOrHeight = 1f; // spec section 2: reference 1080x1920, match height
-            return canvas;
-        }
-
-        // ---- Rounded sprite (soft cookie look without external assets) ----
-
-        private static Texture2D _roundedTex;
-        private static Sprite _roundedSprite;
         private static readonly System.Collections.Generic.Dictionary<string, Sprite> _spriteCache =
             new System.Collections.Generic.Dictionary<string, Sprite>();
 
@@ -88,37 +56,14 @@ namespace CandyShop
             return sprite;
         }
 
-        public static Image CreateIcon(Transform parent, string resourcePath, Vector2 size)
+        // Prefers the catalog Sprite (Assets/Art/Candy Icon, bound on CandyTypeDefinition).
+        public static Sprite CandyIcon(CandyTypeDefinition def)
         {
-            var go = new GameObject("Icon_" + resourcePath.Replace('/', '_'), typeof(Image));
-            go.transform.SetParent(parent, false);
-            var img = go.GetComponent<Image>();
-            img.sprite = LoadSprite(resourcePath);
-            img.preserveAspect = true;
-            img.raycastTarget = false;
-            img.color = Color.white;
-            var rt = (RectTransform)go.transform;
-            rt.sizeDelta = size;
-            return img;
+            if (def != null && def.icon != null) return def.icon;
+            return LoadSprite(CandyIconPath(def != null ? def.typeId : null));
         }
 
-        public static Image CreateBackground(Transform canvasRoot, string resourcePath)
-        {
-            var go = new GameObject("ArtBackground", typeof(Image));
-            go.transform.SetParent(canvasRoot, false);
-            go.transform.SetAsFirstSibling();
-            var img = go.GetComponent<Image>();
-            img.sprite = LoadSprite(resourcePath);
-            img.preserveAspect = false;
-            img.raycastTarget = false;
-            img.color = Color.white;
-            Stretch((RectTransform)go.transform, canvasRoot);
-            return img;
-        }
-
-        // Map a catalog CandyTypeId to an icon under Resources/UI/Candies.
-        // Prefers the exact per-type icon rendered from its 3D mesh (art bible 4.3);
-        // falls back to the family icon when that type has no generated icon yet.
+        // Legacy Resources/UI/Candies lookup used only when the catalog icon is missing.
         public static string CandyIconPath(string typeId)
         {
             if (string.IsNullOrEmpty(typeId)) return "Candies/icon_candy_candy";
@@ -149,150 +94,40 @@ namespace CandyShop
             return "Candies/icon_candy_candy";
         }
 
+        private static Sprite _roundedSprite;
+
+        // Soft cookie shape used by badges / FX dots. Prefabs reference the imported
+        // Resources/UI/ui_rounded sprite; the procedural texture is only a fallback.
         public static Sprite RoundedSprite()
         {
             if (_roundedSprite != null) return _roundedSprite;
+            _roundedSprite = Resources.Load<Sprite>("UI/ui_rounded");
+            if (_roundedSprite != null) return _roundedSprite;
+
             const int size = 64;
             const int radius = 18;
-            if (_roundedTex == null)
+            var tex = new Texture2D(size, size, TextureFormat.ARGB32, false);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            for (int y = 0; y < size; y++)
             {
-                _roundedTex = new Texture2D(size, size, TextureFormat.ARGB32, false);
-                _roundedTex.wrapMode = TextureWrapMode.Clamp;
-                float cx = radius - 0.5f, cy = radius - 0.5f;
-                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
                 {
-                    for (int x = 0; x < size; x++)
+                    bool inside = true;
+                    // Corner check for each of the four corners.
+                    int dx = Mathf.Min(x, size - 1 - x);
+                    int dy = Mathf.Min(y, size - 1 - y);
+                    if (dx < radius && dy < radius)
                     {
-                        bool inside = true;
-                        // Corner check for each of the four corners.
-                        int dx = Mathf.Min(x, size - 1 - x);
-                        int dy = Mathf.Min(y, size - 1 - y);
-                        if (dx < radius && dy < radius)
-                        {
-                            float fx = radius - dx - 0.5f;
-                            float fy = radius - dy - 0.5f;
-                            inside = fx * fx + fy * fy <= radius * radius + 1f;
-                        }
-                        _roundedTex.SetPixel(x, y, inside ? Color.white : Color.clear);
+                        float fx = radius - dx - 0.5f;
+                        float fy = radius - dy - 0.5f;
+                        inside = fx * fx + fy * fy <= radius * radius + 1f;
                     }
+                    tex.SetPixel(x, y, inside ? Color.white : Color.clear);
                 }
-                _roundedTex.Apply();
             }
-            if (_roundedSprite == null)
-                _roundedSprite = Sprite.Create(_roundedTex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+            tex.Apply();
+            _roundedSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
             return _roundedSprite;
-        }
-
-        // ---- Widgets ----
-
-        // Art-bible sprite names under Resources/UI (9-slice imports).
-        public const string PanelSprite = "panel_cream";
-        public const string ButtonPrimary = "btn_primary";
-        public const string ButtonSecondary = "btn_secondary";
-
-        // When spriteName is given, the panel draws that 9-slice art sprite; pass
-        // Color.white to keep the art's own colors. Otherwise falls back to the
-        // rounded cookie (transparent containers / small dots).
-        public static RectTransform CreatePanel(Transform parent, string name, Color color,
-            bool rounded = true, string spriteName = null)
-        {
-            var go = new GameObject(name, typeof(Image));
-            go.transform.SetParent(parent, false);
-            var img = go.GetComponent<Image>();
-            if (!string.IsNullOrEmpty(spriteName))
-            {
-                img.sprite = LoadSprite(spriteName);
-                img.type = Image.Type.Sliced;
-            }
-            else
-            {
-                if (rounded) img.sprite = RoundedSprite();
-                img.type = rounded ? Image.Type.Sliced : Image.Type.Simple;
-            }
-            img.color = color;
-            img.raycastTarget = false;
-            return (RectTransform)go.transform;
-        }
-
-        public static Text CreateText(Transform parent, string content, int size, Color color,
-            TextAnchor anchor = TextAnchor.MiddleCenter, FontStyle style = FontStyle.Bold)
-        {
-            var go = new GameObject("Text_" + content, typeof(Text));
-            go.transform.SetParent(parent, false);
-            var t = go.GetComponent<Text>();
-            t.font = DefaultFont;
-            t.text = content;
-            t.fontSize = size;
-            t.color = color;
-            t.alignment = anchor;
-            t.fontStyle = style;
-            t.raycastTarget = false;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Overflow;
-            // Cocoa outline keeps text readable on the busy cartoon art.
-            var outline = go.AddComponent<Outline>();
-            outline.effectColor = new Color(0.42f, 0.25f, 0.16f, 0.55f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
-            return t;
-        }
-
-        // Buttons draw the candy 9-slice art (btn_primary / btn_secondary). The bg color
-        // is ignored for art buttons (pass Color.white); state changes tint via image.color.
-        public static Button CreateButton(Transform parent, string label, Vector2 size, Color bg,
-            int fontSize = 40, Color? textColor = null, string spriteName = ButtonPrimary)
-        {
-            var go = new GameObject("Btn_" + label, typeof(Image), typeof(Button));
-            go.transform.SetParent(parent, false);
-
-            var img = go.GetComponent<Image>();
-            if (!string.IsNullOrEmpty(spriteName))
-            {
-                img.sprite = LoadSprite(spriteName);
-                img.type = Image.Type.Sliced;
-                img.color = Color.white;
-            }
-            else
-            {
-                img.sprite = RoundedSprite();
-                img.type = Image.Type.Sliced;
-                img.color = bg;
-            }
-
-            var btn = go.GetComponent<Button>();
-            var colors = btn.colors;
-            colors.pressedColor = new Color(0.85f, 0.85f, 0.85f);
-            colors.fadeDuration = 0.08f;
-            btn.colors = colors;
-
-            var rect = (RectTransform)go.transform;
-            rect.sizeDelta = size;
-
-            var txt = CreateText(go.transform, label, fontSize, textColor ?? Color.white);
-            var tr = (RectTransform)txt.transform;
-            tr.anchorMin = Vector2.zero;
-            tr.anchorMax = Vector2.one;
-            tr.offsetMin = new Vector2(16, 8);
-            tr.offsetMax = new Vector2(-16, -8);
-
-            return btn;
-        }
-
-        public static void Stretch(RectTransform rt, Transform parent)
-        {
-            rt.SetParent(parent, false);
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-        }
-
-        public static void Place(RectTransform rt, Vector2 anchorMin, Vector2 anchorMax,
-            Vector2 offsetMin, Vector2 offsetMax)
-        {
-            rt.anchorMin = anchorMin;
-            rt.anchorMax = anchorMax;
-            rt.offsetMin = offsetMin;
-            rt.offsetMax = offsetMax;
         }
     }
 }

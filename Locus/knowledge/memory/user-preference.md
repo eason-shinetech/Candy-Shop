@@ -10,4 +10,5 @@ maintenanceRules: |-
   - Remove one-off arrangements, temporary phrasing, and unconfirmed inferences
 ---
 
-
+- Candy types follow the Art/Candy kit prefabs: one playable prefab under `Assets/Prefabs/Candy` = one `CandyTypeId`. Do not invent types from a handmade list or by re-parsing `Assets/Art/Candy` FBX meshes independently of those prefabs.
+- Candy UI icons (order chips, recipe rows, thumbs) follow `Assets/Art/Candy Icon/<PrefabName>.png` (same stem as the prefab). Do not treat generated `Resources/UI/Candies` or family fallbacks as the source of truth.

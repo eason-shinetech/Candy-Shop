@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
-  m_Name: jelly_B
+  m_Name: jelly_b
   m_EditorClassIdentifier: 
-  typeId: jelly_B
+  typeId: jelly_b
   displayNameZh: "\u679C\u51BB\u7CD6"
   displayNameEn: Jelly
-  prefab: {fileID: 6716011078863359934, guid: 77d9342872b25b9448fb551d4aeb0901, type: 3}
+  prefab: {fileID: 8719849852292753447, guid: b3528105d24eb074482b6585f85d4c51, type: 3}
   isStarter: 0
   isSpecial: 0
-  icon: {fileID: 0}
-  chipColor: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}
+  icon: {fileID: 21300000, guid: 3c7df7c315216aa4d88d46599b162377, type: 3}
+  chipColor: {r: 0.78431374, g: 0.9607843, b: 0.83137256, a: 1}

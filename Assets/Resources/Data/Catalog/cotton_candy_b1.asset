@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
+  m_Name: cotton_candy_b1
+  m_EditorClassIdentifier: 
+  typeId: cotton_candy_b1
+  displayNameZh: "\u68C6\u82B1\u7CD6"
+  displayNameEn: Cotton Candy
+  prefab: {fileID: 5972478077362068943, guid: 6e203f16ccc316243af193e04fc5c7ce, type: 3}
+  isStarter: 0
+  isSpecial: 0
+  icon: {fileID: 21300000, guid: 0d21ccbc5342fa34fa4ba49ed72576c7, type: 3}
+  chipColor: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}

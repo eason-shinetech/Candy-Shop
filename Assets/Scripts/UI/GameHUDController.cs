@@ -1,62 +1,108 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 
 namespace CandyShop
 {
-    // Builds and drives the in-run portrait HUD (spec section 10.4 + supplements section 1).
+    // Drives the in-run portrait HUD (spec section 10.4 + supplements section 1).
+    // Layout lives in Assets/Prefabs/UI/GameHUD.prefab; this controller only binds data.
     public class GameHUDController : MonoBehaviour
     {
+        private static readonly string[] PauseToggleKeys = { "label_music", "label_sfx", "label_haptics" };
+
+        [Header("Top bar")]
+        [SerializeField] private TMP_Text _starsAnchor; // invisible spotlight target
+        [SerializeField] private Image[] _starIcons;
+        [SerializeField] private TMP_Text _coinsText;
+        [SerializeField] private TMP_Text _staminaText;
+        [SerializeField] private Image _vignette;
+        [SerializeField] private RectTransform _timerFill;
+        [SerializeField] private Image _timerFillImage;
+        [SerializeField] private RectTransform _queueStrip;
+        [SerializeField] private RectTransform _orderChipsRow;
+        [SerializeField] private TMP_Text _challengeChipText;
+        [SerializeField] private Button _pauseButton;
+        [SerializeField] private TMP_Text _comboText;
+        [SerializeField] private TMP_Text _perfectStamp;
+
+        [Header("Bottom bar")]
+        [SerializeField] private RectTransform _bottomBar;
+        [SerializeField] private PowerButton[] _powerButtons;
+
+        [Header("Pause")]
+        [SerializeField] private GameObject _pausePopup;
+        [SerializeField] private TMP_Text _pauseTitle;
+        [SerializeField] private TMP_Text _pauseQuitHint;
+        [SerializeField] private Button _pauseContinueBtn;
+        [SerializeField] private Button _pauseQuitBtn;
+        [SerializeField] private Button _pauseLangButton;
+        [SerializeField] private TMP_Text _pauseLangLabel;
+        [SerializeField] private TMP_Text[] _pauseToggleLabels;   // aligned with PauseToggleKeys
+        [SerializeField] private Button[] _pauseToggleButtons;
+
+        [Header("Quit confirm")]
+        [SerializeField] private GameObject _quitConfirm;
+        [SerializeField] private TMP_Text _quitConfirmBody;
+        [SerializeField] private Button _quitYesBtn;
+        [SerializeField] private Button _quitNoBtn;
+
+        [Header("Game over")]
+        [SerializeField] private GameObject _gameOverPopup;
+        [SerializeField] private TMP_Text _gameOverTitle;
+        [SerializeField] private TMP_Text _gameOverStats;
+        [SerializeField] private Button _reviveButton;
+        [SerializeField] private Button _menuButton;
+
+        [Header("Serve chip")]
+        [SerializeField] private GameObject _servePopup;
+        [SerializeField] private TMP_Text _serveRewardText;
+        [SerializeField] private Button _doubleButton;
+
+        [Header("Buy sheet")]
+        [SerializeField] private GameObject _buySheet;
+        [SerializeField] private TMP_Text _buyTitle;
+        [SerializeField] private TMP_Text _buyPrice;
+        [SerializeField] private TMP_Text _buyNote;
+        [SerializeField] private TMP_Text _buyMessage;
+        [SerializeField] private Button _buyButton;
+        [SerializeField] private Button _buyCancelBtn;
+        [SerializeField] private GameObject _insufficientSheet;
+        [SerializeField] private TMP_Text _insufficientMsg;
+        [SerializeField] private Button _insufficientAdBtn;
+        [SerializeField] private Button _insufficientCloseBtn;
+
+        [Header("Shift over")]
+        [SerializeField] private GameObject _shiftOverPopup;
+        [SerializeField] private TMP_Text _shiftOverTitle;
+        [SerializeField] private TMP_Text _shiftOverBody;
+        [SerializeField] private TMP_Text _shiftOverStats;
+        [SerializeField] private Button _shiftOverMenuBtn;
+        [SerializeField] private Button _shiftOverAdBtn;
+
+        [Header("Tutorial")]
+        [SerializeField] private GameObject _tutorialPopup;
+        [SerializeField] private TMP_Text _tutorialBody;
+        [SerializeField] private Button _tutorialNext;
+        [SerializeField] private Button _tutorialSkip;
+
+        [Header("Dynamic items")]
+        [SerializeField] private OrderChip _orderChipPrefab;
+        [SerializeField] private CustomerCard _currentCardPrefab;
+        [SerializeField] private CustomerCard _waitingCardPrefab;
+
+        [Header("Feedback")]
+        [SerializeField] private TMP_Text _staminaFloatText;
+        [SerializeField] private RectTransform _toastTemplate;
+
         private GameManager _game;
         private CustomerOrderManager _orders;
         private PowerUpManager _powerUps;
 
-        private RectTransform _safeRoot;
-        private Text _starsText;
-        private readonly Image[] _starIcons = new Image[3];
-        private Text _coinsText;
-        private RectTransform _timerFill;
-        private Image _timerFillImage;
+        private readonly Dictionary<string, OrderChip> _chipsByType =
+            new Dictionary<string, OrderChip>();
 
-        private RectTransform _queueStrip;
-        private RectTransform _orderChipsRow;
-        private Text _challengeChipText;
-
-        private class PowerButtonEntry
-        {
-            public PowerUpDefinition def;
-            public Button button;   // the thumb-zone button itself
-            public Text labelText;  // the name label (not the count badge)
-            public Text badgeText;  // the count badge
-        }
-
-        private readonly List<PowerButtonEntry> _powerButtons =
-            new List<PowerButtonEntry>();
-
-        private GameObject _pausePopup;
-        private GameObject _quitConfirm;
-        private GameObject _gameOverPopup;
-        private GameObject _servePopup;
-        private Text _serveRewardText;
-        private Button _doubleButton;
-        private Button _reviveButton;
-        private Text _gameOverStats;
-        private GameObject _buySheet;
-        private Text _buySheetMessage;
-        private Button _buyButton;
-        private GameObject _insufficientSheet;
-        private GameObject _tutorialPopup;
-        private Text _tutorialBody;
-        private Button _tutorialNext;
-        private Button _tutorialSkip;
-
-        private Image _vignette;
-        private Text _comboText;
-        private Text _perfectStamp;
-        private Text _staminaText;
-        private GameObject _shiftOverPopup;
-        private Text _staminaFloatText;
         private Coroutine _staminaFloatCo;
         private Coroutine _comboCo;
         private Coroutine _stampCo;
@@ -64,14 +110,15 @@ namespace CandyShop
         private int _comboCount;
         private bool _challengeWasClaimed;
         private int _tutorialStep;
-        private RectTransform _bottomBar;
         private bool _runStarted;
         private int _bestAtRunStart;
         private string _lastFailReason;
         private bool _failPenaltyApplied;
         private float _badgeTimer;
+        private int _lastCoins = int.MinValue;
         private Coroutine _autoContinueCo;
         private PowerUpDefinition _buySheetDef;
+        private bool _pausedForBuySheet;
 
         public static string PendingRecipeUnlockToast; // set by RecipeShopController
         public static int PendingCoinPenaltyToast; // fail coin loss shown on the next menu load
@@ -87,7 +134,8 @@ namespace CandyShop
 
         private void Start()
         {
-            BuildUI();
+            CreatePowerButtons();
+            WireButtons();
             WireEvents();
             StaminaService.StaminaChanged += OnStaminaChanged;
             StaminaService.FloatingTextRequested += ShowStaminaFloat;
@@ -139,138 +187,87 @@ namespace CandyShop
             _game.StartRun();
         }
 
-        // ================= UI construction =================
+        // ================= Setup =================
 
-        private void BuildUI()
+        private void CreatePowerButtons()
         {
-            var canvas = UIKit.CreateCanvas(null, "GameHUD");
-            UIKit.CreateBackground(canvas.transform, "bg_game_shop");
-            _safeRoot = new GameObject("SafeRoot", typeof(RectTransform)).GetComponent<RectTransform>();
-            _safeRoot.SetParent(canvas.transform, false);
-            _safeRoot.gameObject.AddComponent<SafeAreaFitter>();
+            var defs = new[] { _game.magnetDef, _game.tornadoDef, _game.freezeDef };
+            for (int i = 0; i < defs.Length && i < _powerButtons.Length; i++)
+                _powerButtons[i].Setup(_powerUps, defs[i]);
+        }
 
-            // Vignette (soft low-time warning)
-            var vigRect = UIKit.CreatePanel(canvas.transform, "Vignette", new Color(0, 0, 0, 0));
-            UIKit.Stretch(vigRect, canvas.transform);
-            _vignette = vigRect.GetComponent<Image>();
-            _vignette.color = new Color(UIKit.Berry.r, UIKit.Berry.g, UIKit.Berry.b, 0f);
-
-            // ---- Top cluster: stars / coins / pause ----
-            var top = UIKit.CreatePanel(_safeRoot, "Top", new Color(0, 0, 0, 0));
-            UIKit.Place(top, new Vector2(0, 1), new Vector2(1, 1), new Vector2(24, -180), new Vector2(-24, -24));
-
-            _starsText = UIKit.CreateText(top, "", 1, Color.clear, TextAnchor.MiddleLeft);
-            var starRow = UIKit.CreatePanel(top, "Stars", new Color(0, 0, 0, 0));
-            UIKit.Place(starRow, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(8, -48), new Vector2(280, 48));
-            for (int i = 0; i < 3; i++)
-            {
-                var star = UIKit.CreateIcon(starRow, "icon_star", Vector2.one * 84f);
-                var srt = (RectTransform)star.transform;
-                srt.anchorMin = new Vector2(0, 0.5f);
-                srt.anchorMax = new Vector2(0, 0.5f);
-                srt.anchoredPosition = new Vector2(42 + i * 88, 0);
-                _starIcons[i] = star;
-            }
-
-            var coinIcon = UIKit.CreateIcon(top, "icon_coin", Vector2.one * 72f);
-            var coinRt = (RectTransform)coinIcon.transform;
-            coinRt.anchorMin = new Vector2(1, 0.5f);
-            coinRt.anchorMax = new Vector2(1, 0.5f);
-            coinRt.anchoredPosition = new Vector2(-300, 0);
-
-            _coinsText = UIKit.CreateText(top, "", 40, UIKit.Cocoa, TextAnchor.MiddleRight);
-            UIKit.Place((RectTransform)_coinsText.transform,
-                new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-280, -42), new Vector2(-130, 42));
-
-            // Stamina n/20 next to coins (spec 8.2 HUD)
-            var staminaChip = UIKit.CreatePanel(top, "StaminaChip", Color.white, spriteName: UIKit.PanelSprite);
-            UIKit.Place((RectTransform)staminaChip.transform,
-                new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-280, 52), new Vector2(-20, 136));
-            var stamIcon = UIKit.CreateIcon(staminaChip, "icon_stamina", Vector2.one * 56f);
-            var stamIconRt = (RectTransform)stamIcon.transform;
-            stamIconRt.anchorMin = new Vector2(0, 0.5f);
-            stamIconRt.anchorMax = new Vector2(0, 0.5f);
-            stamIconRt.anchoredPosition = new Vector2(36, 0);
-            _staminaText = UIKit.CreateText(staminaChip, "", 32, UIKit.Cocoa, TextAnchor.MiddleLeft);
-            UIKit.Place((RectTransform)_staminaText.transform,
-                new Vector2(0, 0), new Vector2(1, 1), new Vector2(72, 0), new Vector2(-8, 0));
-
-            var pauseBtn = UIKit.CreateButton(top, "", Vector2.one * 96f, Color.white);
-            var pauseIcon = UIKit.CreateIcon(pauseBtn.transform, "icon_pause", Vector2.one * 80f);
-            pauseIcon.raycastTarget = false;
-            UIKit.Place((RectTransform)pauseBtn.transform,
-                new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-116, -48), new Vector2(-20, 48));
-            pauseBtn.onClick.AddListener(() =>
+        private void WireButtons()
+        {
+            _pauseButton.onClick.AddListener(() =>
             {
                 _game.SetPaused(true);
                 _pausePopup.SetActive(true);
             });
 
-            // ---- Timer bar ----
-            var timerBg = UIKit.CreatePanel(top, "TimerBg", Color.white);
-            timerBg.GetComponent<Image>().sprite = UIKit.LoadSprite("bar_timer_bg");
-            timerBg.GetComponent<Image>().type = Image.Type.Sliced;
-            UIKit.Place(timerBg, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, -132), new Vector2(0, -64));
-            var fillGo = new GameObject("TimerFill", typeof(Image));
-            fillGo.transform.SetParent(timerBg, false);
-            _timerFill = (RectTransform)fillGo.transform;
-            _timerFill.anchorMin = Vector2.zero;
-            _timerFill.anchorMax = Vector2.one;
-            _timerFill.offsetMin = new Vector2(8, 8);
-            _timerFill.offsetMax = new Vector2(-8, -8);
-            _timerFillImage = fillGo.GetComponent<Image>();
-            _timerFillImage.sprite = UIKit.LoadSprite("bar_timer_fill");
-            _timerFillImage.type = Image.Type.Sliced;
-            _timerFillImage.color = Color.white;
+            _pauseContinueBtn.onClick.AddListener(() => { HideAllPopups(); _game.SetPaused(false); });
+            _pauseQuitBtn.onClick.AddListener(ShowQuitConfirm);
+            _pauseLangButton.onClick.AddListener(I18nService.ToggleLanguage);
+            for (int i = 0; i < PauseToggleKeys.Length && i < _pauseToggleButtons.Length; i++)
+            {
+                var key = PauseToggleKeys[i];
+                AddToggleBinding(_pauseToggleButtons[i], v =>
+                {
+                    switch (key)
+                    {
+                        case "label_music": SaveDataService.Current.musicEnabled = v; break;
+                        case "label_sfx": SaveDataService.Current.sfxEnabled = v; break;
+                        case "label_haptics": SaveDataService.Current.hapticsEnabled = v; break;
+                    }
+                    SaveDataService.Save();
+                });
+            }
 
-            // ---- Queue strip ----
-            _queueStrip = UIKit.CreatePanel(top, "Queue", new Color(0, 0, 0, 0));
-            UIKit.Place(_queueStrip, new Vector2(0, 0), new Vector2(1, 0), new Vector2(60, -350), new Vector2(-60, -160));
+            _quitYesBtn.onClick.AddListener(() => { HideAllPopups(); ConfirmQuitRun(); });
+            _quitNoBtn.onClick.AddListener(() => _quitConfirm.SetActive(false));
 
-            // ---- Order chips ----
-            _orderChipsRow = UIKit.CreatePanel(top, "OrderChips", new Color(0, 0, 0, 0));
-            UIKit.Place(_orderChipsRow, new Vector2(0, 0), new Vector2(1, 0), new Vector2(40, -540), new Vector2(-40, -380));
+            _reviveButton.onClick.AddListener(DoRevive);
+            _menuButton.onClick.AddListener(LeaveGameOver);
 
-            // ---- Daily challenge chip ----
-            var challengeChip = UIKit.CreatePanel(top, "ChallengeChip", Color.white, spriteName: UIKit.PanelSprite);
-            UIKit.Place(challengeChip, new Vector2(0.5f, 0), new Vector2(0.5f, 0),
-                new Vector2(-280, -620), new Vector2(280, -556));
-            _challengeChipText = UIKit.CreateText(challengeChip, "", 34, UIKit.Cocoa);
-            UIKit.Stretch((RectTransform)_challengeChipText.transform, challengeChip);
+            _doubleButton.onClick.AddListener(DoDoubleReward);
 
-            // ---- Combo text / perfect stamp ----
-            _comboText = UIKit.CreateText(_safeRoot, "", 64, UIKit.SugarPink);
-            var comboRt = (RectTransform)_comboText.transform;
-            comboRt.anchorMin = new Vector2(0.62f, 0.5f);
-            comboRt.anchorMax = new Vector2(0.92f, 0.56f);
-            comboRt.offsetMin = Vector2.zero;
-            comboRt.offsetMax = Vector2.zero;
-            _comboText.text = "";
+            _buyButton.onClick.AddListener(OnBuyPressed);
+            _buyCancelBtn.onClick.AddListener(CloseBuySheet);
+            _insufficientAdBtn.onClick.AddListener(OnInsufficientAdPressed);
+            _insufficientCloseBtn.onClick.AddListener(() => _insufficientSheet.SetActive(false));
 
-            _perfectStamp = UIKit.CreateText(_safeRoot, "", 100, UIKit.Berry);
-            var stampRt = (RectTransform)_perfectStamp.transform;
-            stampRt.rotation = Quaternion.Euler(0, 0, -12);
-            stampRt.anchorMin = new Vector2(0.25f, 0.45f);
-            stampRt.anchorMax = new Vector2(0.75f, 0.58f);
-            stampRt.offsetMin = Vector2.zero;
-            stampRt.offsetMax = Vector2.zero;
-            _perfectStamp.text = "";
+            _shiftOverMenuBtn.onClick.AddListener(() => _game.ReturnToMenu());
+            _shiftOverAdBtn.onClick.AddListener(() =>
+            {
+                var ads = AdServiceLocator.Service;
+                if (ads == null || !ads.IsReady(AdPlacement.reward_stamina)) return;
+                ads.ShowRewarded(AdPlacement.reward_stamina, ok =>
+                {
+                    if (!ok) return;
+                    var cfg = _game.staminaConfig;
+                    StaminaService.GrantHardClamped(cfg != null ? cfg.staminaAdGrant : 5);
+                    RefreshStaminaLabel();
+                    RefreshShiftOverAdButton();
+                });
+            });
 
-            // ---- Bottom thumb zone ----
-            var bottom = UIKit.CreatePanel(_safeRoot, "Bottom", new Color(0, 0, 0, 0));
-            UIKit.Place(bottom, new Vector2(0, 0), new Vector2(1, 0), new Vector2(24, 50), new Vector2(-24, 290));
-            _bottomBar = bottom;
+            _tutorialNext.onClick.AddListener(() =>
+            {
+                if (_tutorialStep >= 3) FinishTutorial();
+                else ShowTutorial(_tutorialStep + 1);
+            });
+            _tutorialSkip.onClick.AddListener(FinishTutorial);
 
-            AddPowerButton(bottom, _game.magnetDef, 0);
-            AddPowerButton(bottom, _game.tornadoDef, 1);
-            AddPowerButton(bottom, _game.freezeDef, 2);
+            // Spotlight package handles its own blocking when available.
+            _tutorialPopup.GetComponent<Image>().raycastTarget = !TutorialSpotlightAdapter.Available;
 
-            BuildPausePopup(canvas.transform);
-            BuildGameOverPopup(canvas.transform);
-            BuildServePopup(_safeRoot);
-            BuildBuySheet(canvas.transform);
-            BuildTutorial();
-            BuildShiftOverPopup(canvas.transform);
+            _pausePopup.SetActive(false);
+            _quitConfirm.SetActive(false);
+            _gameOverPopup.SetActive(false);
+            _servePopup.SetActive(false);
+            _buySheet.SetActive(false);
+            _insufficientSheet.SetActive(false);
+            _shiftOverPopup.SetActive(false);
+            _tutorialPopup.SetActive(false);
 
             RefreshLocalizedTexts();
             RefreshCoins();
@@ -280,310 +277,11 @@ namespace CandyShop
             RefreshBadges();
         }
 
-        // Re-applies every static label after a language switch (i18n spec section 4).
-        private void RefreshLocalizedTexts()
+        private static void AddToggleBinding(Button btn, System.Action<bool> onChanged)
         {
-            if (_pauseTitle != null) _pauseTitle.text = I18nService.Get("pause_title");
-            if (_pauseContinueBtn != null) SetButtonText(_pauseContinueBtn, I18nService.Get("btn_continue"));
-            if (_pauseQuitBtn != null) SetButtonText(_pauseQuitBtn, I18nService.Get("btn_quit_run"));
-            if (_pauseQuitHint != null) _pauseQuitHint.text = I18nService.Get("pause_quit_hint");
-            if (_quitConfirmBody != null) _quitConfirmBody.text = I18nService.Get("quit_confirm_body");
-            if (_quitYesBtn != null) SetButtonText(_quitYesBtn, I18nService.Get("quit_yes"));
-            if (_quitNoBtn != null) SetButtonText(_quitNoBtn, I18nService.Get("quit_no"));
-            if (_gameOverTitle != null) _gameOverTitle.text = I18nService.Get("game_over_title");
-            if (_reviveButton != null) SetButtonText(_reviveButton, I18nService.Get("ad_revive"));
-            if (_menuButton != null) SetButtonText(_menuButton, I18nService.Get("btn_main_menu"));
-            if (_doubleButton != null) SetButtonText(_doubleButton, I18nService.Get("ad_double"));
-            if (_buyButton != null) SetButtonText(_buyButton, I18nService.Get("ad_buy_cta"));
-            if (_buyCancelBtn != null) SetButtonText(_buyCancelBtn, I18nService.Get("btn_cancel"));
-            if (_shiftOverMenuBtn != null) SetButtonText(_shiftOverMenuBtn, I18nService.Get("btn_main_menu"));
-            if (_shiftOverPopup != null && _shiftOverPopup.activeSelf)
-            {
-                SetTextSafe(_shiftOverPopup.transform, "ShiftOverPanel", "ShiftOverBody",
-                    I18nService.Get("stamina_shift_body"));
-            }
-            var buySheetRoot = _buySheet != null ? _buySheet.transform : null;
-            if (buySheetRoot != null)
-            {
-                SetTextSafe(buySheetRoot, "BuySheet", "BuyNote", I18nService.Get("ad_buy_need"));
-                var insuf = buySheetRoot.Find("Insufficient");
-                if (insuf != null)
-                {
-                    var msgTxt = insuf.Find("InsufMsg");
-                    if (msgTxt != null) msgTxt.GetComponent<Text>().text = I18nService.Get("coins_short");
-                }
-            }
-            if (_tutorialNext != null)
-                SetButtonText(_tutorialNext, I18nService.Get("tutorial_next"));
-            if (_pauseLangButton != null)
-                SetButtonText(_pauseLangButton,
-                    I18nService.Language == "en" ? I18nService.Get("lang_zh") : I18nService.Get("lang_en"));
-            if (_shiftOverTitle != null)
-                _shiftOverTitle.text = I18nService.Get("stamina_shift_title");
-            if (_shiftOverBody != null)
-                _shiftOverBody.text = I18nService.Get("stamina_shift_body");
-            // Pause toggle labels (music/sfx/haptics), tracked at build time.
-            foreach (var entry in _pauseToggleLabels)
-                if (entry.label != null)
-                    entry.label.text = I18nService.Get(entry.key);
-            // Power-up button labels: stored references, no hierarchy walking.
-            foreach (var entry in _powerButtons)
-            {
-                if (entry.labelText != null)
-                    entry.labelText.text = entry.def.LocalizedName;
-            }
-
-            // Order chips show candy names — rebuild them so they switch locale mid-run.
-            if (_orders != null && _orders.Current != null)
-                RebuildOrderChips(_orders.Current);
-            var langLabel = _pausePopup != null
-                ? _pausePopup.transform.Find("PausePanel/Toggle_Language/LangLabel") : null;
-            if (langLabel != null)
-                langLabel.GetComponent<Text>().text =
-                    I18nService.Get("label_language") + " / Language";
-            RefreshChallengeChip();
-        }
-
-        private void AddPowerButton(RectTransform bottom, PowerUpDefinition def, int index)
-        {
-            const float w = 300f, h = 200f, gap = 40f;
-            float x = -(w * 3 + gap * 2) / 2f + index * (w + gap) + w / 2f;
-
-            var btn = UIKit.CreateButton(bottom, def.LocalizedName, new Vector2(w, h), Color.white, 36);
-            var rt = (RectTransform)btn.transform;
-            rt.anchorMin = new Vector2(0, 0.5f);
-            rt.anchorMax = new Vector2(0, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(x, 0);
-            btn.image.sprite = UIKit.LoadSprite("btn_primary");
-            btn.image.color = Color.white;
-            var pIcon = UIKit.CreateIcon(btn.transform, PowerIconPath(def.powerUpId), Vector2.one * 72f);
-            var pRt = (RectTransform)pIcon.transform;
-            pRt.anchorMin = new Vector2(0.5f, 1);
-            pRt.anchorMax = new Vector2(0.5f, 1);
-            pRt.anchoredPosition = new Vector2(0, -48);
-            var label = btn.GetComponentInChildren<Text>();
-            if (label != null)
-            {
-                var lrt = (RectTransform)label.transform;
-                lrt.offsetMin = new Vector2(8, 8);
-                lrt.offsetMax = new Vector2(-8, -70);
-            }
-
-            var badgeGo = new GameObject("Badge", typeof(Image));
-            badgeGo.transform.SetParent(btn.transform, false);
-            var badgeImg = badgeGo.GetComponent<Image>();
-            badgeImg.sprite = UIKit.RoundedSprite();
-            badgeImg.type = Image.Type.Sliced;
-            badgeImg.color = UIKit.Cream;
-            badgeImg.raycastTarget = false;
-            var badgeRt = (RectTransform)badgeGo.transform;
-            badgeRt.anchorMin = new Vector2(1, 1);
-            badgeRt.anchorMax = new Vector2(1, 1);
-            badgeRt.sizeDelta = new Vector2(72, 72);
-            badgeRt.anchoredPosition = new Vector2(14, -14);
-
-            var badgeText = UIKit.CreateText(badgeGo.transform, "0", 38, UIKit.Cocoa);
-            UIKit.Stretch((RectTransform)badgeText.transform, badgeRt);
-
-            btn.onClick.AddListener(() => { Haptics.Light(); _powerUps.TapUse(def); });
-            _powerButtons.Add(new PowerButtonEntry
-            {
-                def = def,
-                button = btn,
-                labelText = btn.GetComponentInChildren<Text>(),
-                badgeText = badgeText
-            });
-        }
-
-        // ================= Popups =================
-
-        private Text _pauseTitle;
-        private Text _pauseQuitHint;
-        private Button _pauseLangButton;
-        private readonly List<(string key, Text label)> _pauseToggleLabels =
-            new List<(string, Text)>();
-        private Button _pauseContinueBtn;
-        private Button _pauseQuitBtn;
-        private Text _quitConfirmBody;
-        private Button _quitYesBtn;
-        private Button _quitNoBtn;
-        private Text _gameOverTitle;
-        private Button _menuButton;
-        private Text _shiftOverTitle;
-        private Text _shiftOverBody;
-        private Text _shiftOverStats;
-        private Button _shiftOverMenuBtn;
-
-        private static void SetButtonText(Button button, string value)
-        {
-            if (button == null) return;
-            var txt = button.GetComponentInChildren<Text>();
-            if (txt != null) txt.text = value;
-        }
-
-        private static void SetTextSafe(Transform parent, string childName, string textChildName, string value)
-        {
-            if (parent == null) return;
-            var child = parent.Find(childName);
-            if (child == null) return;
-            var t = child.Find(textChildName);
-            if (t != null) t.GetComponent<Text>().text = value;
-        }
-
-        private void BuildPausePopup(Transform parent)
-        {
-            var dim = UIKit.CreatePanel(parent, "PauseDim", new Color(0, 0, 0, 0.45f));
-            UIKit.Stretch(dim, parent);
-            var dimImg = dim.GetComponent<Image>();
-            dimImg.raycastTarget = true;
-            _pausePopup = dim.gameObject;
-
-            var panel = UIKit.CreatePanel(dim, "PausePanel", Color.white, spriteName: UIKit.PanelSprite);
-            panel.sizeDelta = new Vector2(800, 980);
-            panel.anchoredPosition = Vector2.zero;
-
-            _pauseTitle = UIKit.CreateText(panel, "", 64, UIKit.Cocoa);
-            _pauseTitle.rectTransform.anchoredPosition = new Vector2(0, 400);
-
-            _pauseContinueBtn = UIKit.CreateButton(panel, "", new Vector2(600, 140), UIKit.SugarPink);
-            _pauseContinueBtn.transform.localPosition = new Vector3(0, 240, 0);
-            _pauseContinueBtn.onClick.AddListener(() => { HideAllPopups(); _game.SetPaused(false); });
-
-            _pauseQuitBtn = UIKit.CreateButton(panel, "", new Vector2(600, 140), Color.white, 40,
-                spriteName: UIKit.ButtonSecondary);
-            _pauseQuitBtn.transform.localPosition = new Vector3(0, 70, 0);
-            _pauseQuitBtn.onClick.AddListener(ShowQuitConfirm);
-
-            CreateToggle(panel, I18nService.Get("label_music"), SaveDataService.Current.musicEnabled, v =>
-            {
-                SaveDataService.Current.musicEnabled = v;
-                SaveDataService.Save();
-            }, new Vector2(0, -80));
-
-            CreateToggle(panel, I18nService.Get("label_sfx"), SaveDataService.Current.sfxEnabled, v =>
-            {
-                SaveDataService.Current.sfxEnabled = v;
-                SaveDataService.Save();
-            }, new Vector2(0, -190));
-
-            CreateToggle(panel, I18nService.Get("label_haptics"), SaveDataService.Current.hapticsEnabled, v =>
-            {
-                SaveDataService.Current.hapticsEnabled = v;
-                SaveDataService.Save();
-            }, new Vector2(0, -300));
-
-            // Language row (i18n spec section 4: Main Menu and Pause). Bilingual labels.
-            AddPauseLanguageRow(panel, new Vector2(0, -360));
-
-            var hint = UIKit.CreateText(panel, "", 30, UIKit.Grape);
-            hint.rectTransform.anchoredPosition = new Vector2(0, -420);
-            _pauseQuitHint = hint;
-
-            _pausePopup.SetActive(false);
-
-            // Quit confirm layer
-            var confirmDim = UIKit.CreatePanel(parent, "QuitConfirmDim", new Color(0, 0, 0, 0.55f));
-            UIKit.Stretch(confirmDim, parent);
-            confirmDim.GetComponent<Image>().raycastTarget = true;
-            var cPanel = UIKit.CreatePanel(confirmDim, "Confirm", Color.white, spriteName: UIKit.PanelSprite);
-            cPanel.sizeDelta = new Vector2(820, 520);
-            cPanel.anchoredPosition = Vector2.zero;
-
-            _quitConfirmBody = UIKit.CreateText(cPanel, "", 44, UIKit.Cocoa);
-            _quitConfirmBody.rectTransform.anchoredPosition = new Vector2(0, 100);
-
-            _quitYesBtn = UIKit.CreateButton(cPanel, "", new Vector2(300, 130), new Color(1f, 0.75f, 0.78f));
-            _quitYesBtn.transform.localPosition = new Vector3(-180, -140, 0);
-            _quitYesBtn.onClick.AddListener(() => { HideAllPopups(); ConfirmQuitRun(); });
-
-            _quitNoBtn = UIKit.CreateButton(cPanel, "", new Vector2(300, 130), Color.white, 40,
-                spriteName: UIKit.ButtonSecondary);
-            _quitNoBtn.transform.localPosition = new Vector3(180, -140, 0);
-            _quitNoBtn.onClick.AddListener(() => confirmDim.gameObject.SetActive(false));
-
-            _quitConfirm = confirmDim.gameObject;
-            _quitConfirm.SetActive(false);
-        }
-
-        // Bilingual 中文/English switcher for the pause panel (persisted via SetLanguage).
-        private void AddPauseLanguageRow(Transform parent, Vector2 pos)
-        {
-            var row = new GameObject("Toggle_Language", typeof(RectTransform));
-            row.transform.SetParent(parent, false);
-            var rr = (RectTransform)row.transform;
-            rr.sizeDelta = new Vector2(620, 84);
-            rr.localPosition = pos;
-
-            var t = UIKit.CreateText(row.transform, "", 40, UIKit.Cocoa, TextAnchor.MiddleLeft);
-            t.name = "LangLabel";
-            var trt = (RectTransform)t.transform;
-            trt.anchorMin = Vector2.zero;
-            trt.anchorMax = new Vector2(0, 1);
-            trt.offsetMin = Vector2.zero;
-            trt.offsetMax = new Vector2(360, 0);
-
-            _pauseLangButton = UIKit.CreateButton(row.transform,
-                I18nService.Language == "en" ? I18nService.Get("lang_zh") : I18nService.Get("lang_en"),
-                new Vector2(150, 78), Color.white, 32, spriteName: UIKit.ButtonSecondary);
-            _pauseLangButton.name = "LangSwitch";
-            var brt = (RectTransform)_pauseLangButton.transform;
-            brt.anchorMin = new Vector2(1, 0.5f);
-            brt.anchorMax = new Vector2(1, 0.5f);
-            brt.anchoredPosition = new Vector2(-90, 0);
-            _pauseLangButton.onClick.AddListener(() => I18nService.ToggleLanguage());
-        }
-
-        private void ShowQuitConfirm()
-        {
-            if (_quitConfirm != null) _quitConfirm.SetActive(true);
-        }
-
-        // Confirmed 放弃本局: counts as a fail — stamina -3 once, then menu (spec 8.2).
-        private void ConfirmQuitRun()
-        {
-            _lastFailReason = "quit";
-            if (!_failPenaltyApplied)
-            {
-                _failPenaltyApplied = true;
-                // Stamina -3 (float) + fail coin penalty (supplements 2.0), both once.
-                _game.ConfirmFailPenalty();
-                PendingCoinPenaltyToast = _game.LastFailCoinPenalty;
-            }
-            _game.QuitRun();
-        }
-
-        private void CreateToggle(Transform parent, string label, bool value, System.Action<bool> onChanged, Vector2 pos)
-        {
-            var row = new GameObject("ToggleRow_" + _pauseToggleLabels.Count, typeof(RectTransform));
-            row.transform.SetParent(parent, false);
-            var rr = (RectTransform)row.transform;
-            rr.sizeDelta = new Vector2(620, 84);
-            rr.localPosition = pos;
-
-            var t = UIKit.CreateText(row.transform, label, 40, UIKit.Cocoa, TextAnchor.MiddleLeft);
-            // Remember which i18n key drives this label so language switches re-apply it.
-            if (label == I18nService.Get("label_music")) _pauseToggleLabels.Add(("label_music", t));
-            else if (label == I18nService.Get("label_sfx")) _pauseToggleLabels.Add(("label_sfx", t));
-            else if (label == I18nService.Get("label_haptics")) _pauseToggleLabels.Add(("label_haptics", t));
-            var trt = (RectTransform)t.transform;
-            trt.anchorMin = Vector2.zero;
-            trt.anchorMax = new Vector2(0, 1);
-            trt.offsetMin = Vector2.zero;
-            trt.offsetMax = new Vector2(360, 0);
-
-            var btn = UIKit.CreateButton(row.transform,
-                value ? I18nService.Get("toggle_on") : I18nService.Get("toggle_off"), new Vector2(150, 78),
-                Color.white, 36);
-            btn.image.color = value ? Color.white : new Color(0.72f, 0.72f, 0.72f);
-            var brt = (RectTransform)btn.transform;
-            brt.anchorMin = new Vector2(1, 0.5f);
-            brt.anchorMax = new Vector2(1, 0.5f);
-            brt.anchoredPosition = new Vector2(-90, 0);
-
             btn.onClick.AddListener(() =>
             {
-                var txt = btn.GetComponentInChildren<Text>();
+                var txt = btn.GetComponentInChildren<TMP_Text>();
                 bool isOn = txt.text == I18nService.Get("toggle_on");
                 isOn = !isOn;
                 txt.text = isOn ? I18nService.Get("toggle_on") : I18nService.Get("toggle_off");
@@ -592,290 +290,33 @@ namespace CandyShop
             });
         }
 
-        private void BuildGameOverPopup(Transform parent)
+        private void OnBuyPressed()
         {
-            var dim = UIKit.CreatePanel(parent, "GameOverDim", new Color(0, 0, 0, 0.6f));
-            UIKit.Stretch(dim, parent);
-            dim.GetComponent<Image>().raycastTarget = true;
-            _gameOverPopup = dim.gameObject;
-
-            var panel = UIKit.CreatePanel(dim, "GameOverPanel", Color.white, spriteName: UIKit.PanelSprite);
-            panel.sizeDelta = new Vector2(860, 1050);
-            panel.anchoredPosition = Vector2.zero;
-
-            _gameOverTitle = UIKit.CreateText(panel, "", 80, UIKit.Cocoa);
-            _gameOverTitle.rectTransform.anchoredPosition = new Vector2(0, 420);
-
-            _gameOverStats = UIKit.CreateText(panel, "", 44, UIKit.Cocoa, TextAnchor.UpperCenter);
-            var srt = (RectTransform)_gameOverStats.transform;
-            srt.sizeDelta = new Vector2(800, 420);
-            srt.anchoredPosition = new Vector2(0, 100);
-
-            _reviveButton = UIKit.CreateButton(panel, "", new Vector2(700, 140), Color.white, 42,
-                spriteName: UIKit.ButtonSecondary);
-            _reviveButton.transform.localPosition = new Vector3(0, -250, 0);
-            _reviveButton.onClick.AddListener(DoRevive);
-
-            _menuButton = UIKit.CreateButton(panel, "", new Vector2(700, 140), UIKit.SugarPink);
-            _menuButton.transform.localPosition = new Vector3(0, -430, 0);
-            _menuButton.onClick.AddListener(LeaveGameOver);
-
-            _gameOverPopup.SetActive(false);
-        }
-
-        // Leaving the Game Over screen without revive confirms the fail: stamina -3 (spec 8.2).
-        private void LeaveGameOver()
-        {
-            if (reasonIsFail(_lastFailReason) && !_failPenaltyApplied)
+            if (_buySheetDef == null) return;
+            if (EconomyManager.Coins < _buySheetDef.buyCost)
             {
-                _failPenaltyApplied = true;
-                // Stamina -3 (float) + fail coin penalty (supplements 2.0), both once.
-                _game.ConfirmFailPenalty();
-                PendingCoinPenaltyToast = _game.LastFailCoinPenalty; // shown on the next menu load
+                ShowInsufficientInBuySheet();
+                return;
             }
-            _game.ReturnToMenu();
-        }
-
-        private static bool reasonIsFail(string reason)
-        {
-            return reason == "stars" || reason == "timeout" || reason == "quit";
-        }
-
-        private void BuildServePopup(RectTransform parent)
-        {
-            var chip = UIKit.CreatePanel(parent, "ServeChip", Color.white, spriteName: UIKit.PanelSprite);
-            chip.sizeDelta = new Vector2(940, 230);
-            chip.anchorMin = new Vector2(0.5f, 0.5f);
-            chip.anchorMax = new Vector2(0.5f, 0.5f);
-            chip.anchoredPosition = new Vector2(0, 480);
-
-            _serveRewardText = UIKit.CreateText(chip, "+10", 72, UIKit.Cocoa);
-            ((RectTransform)_serveRewardText.transform).anchoredPosition = new Vector2(-200, 0);
-
-            _doubleButton = UIKit.CreateButton(chip, "", new Vector2(360, 110), Color.white, 36,
-                spriteName: UIKit.ButtonSecondary);
-            var drt = (RectTransform)_doubleButton.transform;
-            drt.anchorMin = new Vector2(1, 0.5f);
-            drt.anchorMax = new Vector2(1, 0.5f);
-            drt.anchoredPosition = new Vector2(-220, 0);
-            _doubleButton.onClick.AddListener(DoDoubleReward);
-
-            _servePopup = chip.gameObject;
-            _servePopup.SetActive(false);
-        }
-
-        private void BuildBuySheet(Transform parent)
-        {
-            var dim = UIKit.CreatePanel(parent, "BuySheetDim", new Color(0, 0, 0, 0.45f));
-            UIKit.Stretch(dim, parent);
-            dim.GetComponent<Image>().raycastTarget = true;
-            dim.GetComponent<Image>().color = new Color(0, 0, 0, 0.45f);
-            _buySheet = dim.gameObject;
-
-            var panel = UIKit.CreatePanel(dim, "BuySheet", Color.white, spriteName: UIKit.PanelSprite);
-            panel.sizeDelta = new Vector2(860, 780);
-            panel.anchoredPosition = Vector2.zero;
-
-            var title = UIKit.CreateText(panel, "", 54, UIKit.Cocoa);
-            title.rectTransform.anchoredPosition = new Vector2(0, 280);
-            title.name = "Title";
-
-            var price = UIKit.CreateText(panel, "", 44, UIKit.Cocoa);
-            price.rectTransform.anchoredPosition = new Vector2(0, 190);
-            price.name = "Price";
-
-            var note = UIKit.CreateText(panel, "", 32, UIKit.Grape);
-            note.name = "BuyNote";
-            note.rectTransform.anchoredPosition = new Vector2(0, 130);
-
-            _buySheetMessage = UIKit.CreateText(panel, "", 34, UIKit.MagnetRed);
-            _buySheetMessage.rectTransform.anchoredPosition = new Vector2(0, 60);
-            _buySheetMessage.text = "";
-
-            _buyButton = UIKit.CreateButton(panel, "", new Vector2(680, 140), UIKit.SugarPink, 40);
-            _buyButton.transform.localPosition = new Vector3(0, -60, 0);
-            _buyButton.onClick.AddListener(() =>
+            _powerUps.TryPurchaseAndAutoUse(_buySheetDef, msg =>
             {
-                if (_buySheetDef == null) return;
-                if (EconomyManager.Coins < _buySheetDef.buyCost)
-                {
-                    ShowInsufficientInBuySheet();
-                    return;
-                }
-                _powerUps.TryPurchaseAndAutoUse(_buySheetDef, msg =>
-                {
-                    _buySheetMessage.text = msg ?? "";
-                    if (msg == null) CloseBuySheet();
-                    RefreshCoins();
-                    RefreshBadges();
-                });
+                _buyMessage.text = msg ?? "";
+                if (msg == null) CloseBuySheet();
+                RefreshCoins();
+                RefreshBadges();
             });
+        }
 
-            _buyCancelBtn = UIKit.CreateButton(panel, "", new Vector2(680, 120), Color.white, 38,
-                spriteName: UIKit.ButtonSecondary);
-            _buyCancelBtn.transform.localPosition = new Vector3(0, -230, 0);
-            _buyCancelBtn.onClick.AddListener(CloseBuySheet);
-
-            _buyTitle = title;
-            _buyPrice = price;
-
-            // Insufficient-coins inner sheet
-            var insufPanel = UIKit.CreatePanel(dim, "Insufficient", Color.white, spriteName: UIKit.PanelSprite);
-            insufPanel.sizeDelta = new Vector2(820, 500);
-            insufPanel.anchoredPosition = Vector2.zero;
-            insufPanel.SetAsLastSibling();
-
-            var insufMsg = UIKit.CreateText(insufPanel, "", 48, UIKit.Cocoa);
-            insufMsg.name = "InsufMsg";
-            insufMsg.rectTransform.anchoredPosition = new Vector2(0, 160);
-
-            var adBtn = UIKit.CreateButton(insufPanel, I18nService.Get("ad_coins_80"), new Vector2(660, 130), UIKit.SugarPink, 38);
-            adBtn.name = "AdButton"; // distinct name so only the ad button is disabled when not ready
-            adBtn.transform.localPosition = new Vector3(0, 10, 0);
-            adBtn.onClick.AddListener(() =>
+        private void OnInsufficientAdPressed()
+        {
+            if (_buySheetDef == null) return;
+            _powerUps.WatchAdForCoins(_buySheetDef, () =>
             {
-                if (_buySheetDef == null) return;
-                _powerUps.WatchAdForCoins(_buySheetDef, () =>
-                {
-                    RefreshCoins();
-                    RefreshBadges();
-                    insufPanel.gameObject.SetActive(false);
-                });
+                RefreshCoins();
+                RefreshBadges();
+                _insufficientSheet.SetActive(false);
             });
-
-            var closeInsuf = UIKit.CreateButton(insufPanel, I18nService.Get("btn_cancel"), new Vector2(660, 110),
-                Color.white, 36, spriteName: UIKit.ButtonSecondary);
-            closeInsuf.transform.localPosition = new Vector3(0, -160, 0);
-            closeInsuf.onClick.AddListener(() => insufPanel.gameObject.SetActive(false));
-
-            _insufficientSheet = insufPanel.gameObject;
-            _insufficientSheet.SetActive(false);
-            _buySheet.SetActive(false);
         }
-
-        private Text _buyTitle;
-        private Text _buyPrice;
-        private Button _buyCancelBtn;
-
-        private void ShowInsufficientInBuySheet()
-        {
-            // Keep the sheet open with Cancel live; disable only the +80-ad button (review P1).
-            if (_insufficientSheet == null) return;
-            var ads = AdServiceLocator.Service;
-            bool adReady = ads != null && ads.IsReady(AdPlacement.reward_coins);
-            var adBtnTr = _insufficientSheet.transform.Find("AdButton");
-            if (adBtnTr != null)
-                adBtnTr.GetComponent<Button>().interactable = adReady;
-            _insufficientSheet.SetActive(true);
-        }
-
-        private bool _pausedForBuySheet;
-
-        private void OpenBuySheet(PowerUpDefinition def)
-        {
-            _buySheetDef = def;
-            _buyTitle.text = string.Format(I18nService.Get("powerup_buy_title"), def.LocalizedName);
-            _buyPrice.text = string.Format(I18nService.Get("powerup_price"), def.buyCost);
-            _buySheetMessage.text = "";
-            bool afford = EconomyManager.Coins >= def.buyCost;
-            _buyButton.image.color = afford ? Color.white : new Color(0.82f, 0.62f, 0.66f);
-
-            // Spec 14: while an ad/sheet is up, the customer timer pauses (same as Pause).
-            if (_game.RunActive && !_game.Paused)
-            {
-                _game.SetPaused(true);
-                _pausedForBuySheet = true;
-            }
-            _buySheet.SetActive(true);
-        }
-
-        private void CloseBuySheet()
-        {
-            _buySheet.SetActive(false);
-            if (_insufficientSheet != null) _insufficientSheet.SetActive(false);
-            if (_pausedForBuySheet)
-            {
-                _pausedForBuySheet = false;
-                _game.SetPaused(false);
-            }
-            RefreshBadges();
-        }
-
-        private void BuildTutorial()
-        {
-            // Dedicated high-order canvas: the card stays clickable above the
-            // Tutorial Spotlight overlay (when the package is imported), while the
-            // spotlight dims everything except the highlighted target.
-            var tutorialCanvas = UIKit.CreateCanvas(null, "TutorialCanvas");
-            tutorialCanvas.sortingOrder = 500;
-            var safeRoot = new GameObject("SafeRoot", typeof(RectTransform)).GetComponent<RectTransform>();
-            safeRoot.SetParent(tutorialCanvas.transform, false);
-            safeRoot.gameObject.AddComponent<SafeAreaFitter>();
-
-            var dim = UIKit.CreatePanel(safeRoot, "TutorialDim", new Color(0, 0, 0, 0.6f));
-            UIKit.Stretch(dim, safeRoot);
-            dim.GetComponent<Image>().raycastTarget = !TutorialSpotlightAdapter.Available;
-            _tutorialPopup = dim.gameObject;
-
-            var card = UIKit.CreatePanel(dim, "TutorialCard", Color.white, spriteName: UIKit.PanelSprite);
-            card.sizeDelta = new Vector2(880, 900);
-            card.anchoredPosition = Vector2.zero;
-
-            _tutorialBody = UIKit.CreateText(card, "", 46, UIKit.Cocoa, TextAnchor.UpperCenter);
-            var brt = (RectTransform)_tutorialBody.transform;
-            brt.sizeDelta = new Vector2(780, 420);
-            brt.anchoredPosition = new Vector2(0, 140);
-
-            _tutorialNext = UIKit.CreateButton(card, I18nService.Get("tutorial_next"), new Vector2(560, 140), UIKit.SugarPink);
-            _tutorialNext.transform.localPosition = new Vector3(0, -240, 0);
-            _tutorialNext.onClick.AddListener(() =>
-            {
-                if (_tutorialStep >= 3) FinishTutorial();
-                else ShowTutorial(_tutorialStep + 1);
-            });
-
-            _tutorialSkip = UIKit.CreateButton(card, I18nService.Get("tutorial_skip"), new Vector2(300, 100),
-                Color.white, 34, spriteName: UIKit.ButtonSecondary);
-            _tutorialSkip.transform.localPosition = new Vector3(0, -370, 0);
-            _tutorialSkip.onClick.AddListener(FinishTutorial);
-
-            _tutorialPopup.SetActive(false);
-        }
-
-        private void ShowTutorial(int step)
-        {
-            _tutorialStep = step;
-            if (_tutorialSkip != null)
-                _tutorialSkip.gameObject.SetActive(step >= 2); // no skip on step 1
-            _tutorialPopup.SetActive(true);
-            switch (step)
-            {
-                case 1:
-                    _tutorialBody.text = I18nService.Get("tutorial_1");
-                    SetButtonText(_tutorialNext, I18nService.Get("tutorial_next"));
-                    TutorialSpotlightAdapter.Show(_orderChipsRow); // point at order chips + pile
-                    break;
-                case 2:
-                    _tutorialBody.text = I18nService.Get("tutorial_2");
-                    TutorialSpotlightAdapter.Show(_starsText.rectTransform); // stars restore rule
-                    break;
-                default:
-                    _tutorialBody.text = I18nService.Get("tutorial_3");
-                    TutorialSpotlightAdapter.Show(_bottomBar); // power-up thumb zone
-                    break;
-            }
-        }
-
-        private void FinishTutorial()
-        {
-            TutorialSpotlightAdapter.Hide();
-            SaveDataService.Current.tutorialDone = true;
-            SaveDataService.Save();
-            _tutorialPopup.SetActive(false);
-            BeginRun();
-        }
-
-        // ================= Event wiring =================
 
         private void WireEvents()
         {
@@ -903,34 +344,15 @@ namespace CandyShop
         {
             foreach (Transform child in _orderChipsRow)
                 Destroy(child.gameObject);
+            _chipsByType.Clear();
 
-            const float chipW = 320f, gap = 24f;
-            int n = order.types.Count;
-            for (int i = 0; i < n; i++)
+            // The chips row is a HorizontalLayoutGroup; prefab carries the size.
+            for (int i = 0; i < order.types.Count; i++)
             {
                 var type = order.types[i];
-                var chip = UIKit.CreatePanel(_orderChipsRow, "Chip_" + type.typeId, Color.white, spriteName: UIKit.PanelSprite);
-                chip.sizeDelta = new Vector2(chipW, 140);
-                chip.anchorMin = new Vector2(0.5f, 0.5f);
-                chip.anchorMax = new Vector2(0.5f, 0.5f);
-                float x = -(n - 1) * (chipW + gap) / 2f + i * (chipW + gap);
-                chip.anchoredPosition = new Vector2(x, 0);
-
-                var candyIcon = UIKit.CreateIcon(chip, UIKit.CandyIconPath(type.typeId), Vector2.one * 88f);
-                candyIcon.name = "Dot";
-                var candyRt = (RectTransform)candyIcon.transform;
-                candyRt.anchorMin = new Vector2(0, 0.5f);
-                candyRt.anchorMax = new Vector2(0, 0.5f);
-                candyRt.anchoredPosition = new Vector2(72, 0);
-
-                var label = UIKit.CreateText(chip, type.LocalizedName + " x" + order.remaining[i], 36, UIKit.Cocoa,
-                    TextAnchor.MiddleLeft);
-                label.name = "Count";
-                var lrt = (RectTransform)label.transform;
-                lrt.anchorMin = new Vector2(0, 0.5f);
-                lrt.anchorMax = new Vector2(1, 0.5f);
-                lrt.offsetMin = new Vector2(136, -50);
-                lrt.offsetMax = new Vector2(-16, 50);
+                var chip = Instantiate(_orderChipPrefab, _orderChipsRow);
+                chip.Bind(type, order.remaining[i]);
+                _chipsByType[type.typeId] = chip;
             }
         }
 
@@ -940,27 +362,14 @@ namespace CandyShop
             foreach (Transform child in _queueStrip)
                 Destroy(child.gameObject);
 
-            var current = UIKit.CreatePanel(_queueStrip, "Customer_Current", Color.white, spriteName: UIKit.PanelSprite);
-            current.sizeDelta = new Vector2(300, 180);
-            current.anchorMin = new Vector2(0, 0.5f);
-            current.anchorMax = new Vector2(0, 0.5f);
-            current.anchoredPosition = new Vector2(170, 10);
-            PlacePortrait(current, PortraitPath(0), new Vector2(0, 18), Vector2.one * 140f);
-            var curLabel = UIKit.CreateText(current, I18nService.Get("queue_current"), 28, UIKit.Cocoa);
-            curLabel.rectTransform.anchoredPosition = new Vector2(0, -70);
+            // The queue strip is a HorizontalLayoutGroup; the two card prefabs carry their sizes.
+            var current = Instantiate(_currentCardPrefab, _queueStrip);
+            current.Bind(PortraitPath(0), I18nService.Get("queue_current"));
 
             for (int i = 0; i < _game.orderConfig.waitingCount; i++)
             {
-                var waitingState = _orders.GetWaiting(i);
-                var card = UIKit.CreatePanel(_queueStrip, "Customer_Wait" + i, Color.white, spriteName: UIKit.PanelSprite);
-                card.sizeDelta = new Vector2(230, 140);
-                card.anchorMin = new Vector2(0, 0.5f);
-                card.anchorMax = new Vector2(0, 0.5f);
-                card.anchoredPosition = new Vector2(355 + i * 255, -10);
-                if (waitingState != null)
-                    PlacePortrait(card, PortraitPath(i + 1), new Vector2(0, 12), Vector2.one * 96f);
-                var lbl = UIKit.CreateText(card, I18nService.Get("queue_waiting"), 24, UIKit.Cocoa);
-                lbl.rectTransform.anchoredPosition = new Vector2(0, -52);
+                var card = Instantiate(_waitingCardPrefab, _queueStrip);
+                card.Bind(PortraitPath(i + 1), I18nService.Get("queue_waiting"));
             }
         }
 
@@ -982,7 +391,11 @@ namespace CandyShop
 
         private void Update()
         {
-            RefreshCoins();
+            if (EconomyManager.Coins != _lastCoins)
+            {
+                _lastCoins = EconomyManager.Coins;
+                RefreshCoins();
+            }
 
             _badgeTimer += Time.unscaledDeltaTime;
             if (_badgeTimer >= 0.25f)
@@ -1019,18 +432,6 @@ namespace CandyShop
 
         private IEnumerator StaminaFloatRoutine(string text)
         {
-            if (_staminaFloatText == null)
-            {
-                var host = UIKit.CreatePanel(_safeRoot, "StaminaFloat", new Color(0, 0, 0, 0));
-                host.anchorMin = new Vector2(1, 1);
-                host.anchorMax = new Vector2(1, 1);
-                host.pivot = new Vector2(0.5f, 0.5f);
-                host.sizeDelta = new Vector2(320, 90);
-                host.anchoredPosition = new Vector2(-290, -240);
-                _staminaFloatText = UIKit.CreateText(host, "", 44, UIKit.SkyMint);
-                UIKit.Stretch((RectTransform)_staminaFloatText.transform, host);
-            }
-
             _staminaFloatText.text = text;
             var rt = (RectTransform)_staminaFloatText.transform.parent;
             float t = 0f;
@@ -1052,10 +453,7 @@ namespace CandyShop
         private void RefreshBadges()
         {
             foreach (var entry in _powerButtons)
-            {
-                int count = _powerUps.CountOf(entry.def.powerUpId);
-                entry.badgeText.text = count > 0 ? count.ToString() : "+";
-            }
+                entry.SetBadge(_powerUps.CountOf(entry.Def.powerUpId));
         }
 
         private void RefreshStars(int stars)
@@ -1072,22 +470,6 @@ namespace CandyShop
         {
             int n = ((_game != null ? _game.CustomersServed : 0) + slot) % 6 + 1;
             return "Customers/portrait_customer_0" + n;
-        }
-
-        private static string PowerIconPath(string id)
-        {
-            if (id == "magnet") return "icon_magnet";
-            if (id == "tornado") return "icon_tornado";
-            return "icon_freeze";
-        }
-
-        private static void PlacePortrait(RectTransform parent, string path, Vector2 pos, Vector2 size)
-        {
-            var img = UIKit.CreateIcon(parent, path, size);
-            var rt = (RectTransform)img.transform;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = pos;
         }
 
         private void RefreshChallengeChip()
@@ -1107,6 +489,52 @@ namespace CandyShop
                 _challengeWasClaimed = true;
                 StartCoroutine(ShowToastRoutine(I18nService.Get("challenge_complete_toast"), 0f));
             }
+        }
+
+        // Re-applies every static label after a language switch (i18n spec section 4).
+        private void RefreshLocalizedTexts()
+        {
+            if (_pauseTitle != null) _pauseTitle.text = I18nService.Get("pause_title");
+            SetButtonText(_pauseContinueBtn, I18nService.Get("btn_continue"));
+            SetButtonText(_pauseQuitBtn, I18nService.Get("btn_quit_run"));
+            if (_pauseQuitHint != null) _pauseQuitHint.text = I18nService.Get("pause_quit_hint");
+            if (_quitConfirmBody != null) _quitConfirmBody.text = I18nService.Get("quit_confirm_body");
+            SetButtonText(_quitYesBtn, I18nService.Get("quit_yes"));
+            SetButtonText(_quitNoBtn, I18nService.Get("quit_no"));
+            if (_gameOverTitle != null) _gameOverTitle.text = I18nService.Get("game_over_title");
+            SetButtonText(_reviveButton, I18nService.Get("ad_revive"));
+            SetButtonText(_menuButton, I18nService.Get("btn_main_menu"));
+            SetButtonText(_doubleButton, I18nService.Get("ad_double"));
+            SetButtonText(_buyButton, I18nService.Get("ad_buy_cta"));
+            SetButtonText(_buyCancelBtn, I18nService.Get("btn_cancel"));
+            SetButtonText(_shiftOverMenuBtn, I18nService.Get("btn_main_menu"));
+            if (_buyNote != null) _buyNote.text = I18nService.Get("ad_buy_need");
+            if (_insufficientMsg != null) _insufficientMsg.text = I18nService.Get("coins_short");
+            SetButtonText(_tutorialNext, I18nService.Get("tutorial_next"));
+            SetButtonText(_pauseLangButton,
+                I18nService.Language == "en" ? I18nService.Get("lang_zh") : I18nService.Get("lang_en"));
+            if (_shiftOverTitle != null)
+                _shiftOverTitle.text = I18nService.Get("stamina_shift_title");
+            if (_shiftOverBody != null)
+                _shiftOverBody.text = I18nService.Get("stamina_shift_body");
+
+            // Pause toggle labels (music/sfx/haptics).
+            if (_pauseToggleLabels != null)
+                for (int i = 0; i < _pauseToggleLabels.Length && i < PauseToggleKeys.Length; i++)
+                    if (_pauseToggleLabels[i] != null)
+                        _pauseToggleLabels[i].text = I18nService.Get(PauseToggleKeys[i]);
+
+            // Power-up button labels: stored references, no hierarchy walking.
+            foreach (var entry in _powerButtons)
+                entry.LabelText.text = entry.Def.LocalizedName;
+
+            if (_pauseLangLabel != null)
+                _pauseLangLabel.text = I18nService.Get("label_language");
+
+            // Order chips show candy names — rebuild them so they switch locale mid-run.
+            if (_orders != null && _orders.Current != null)
+                RebuildOrderChips(_orders.Current);
+            RefreshChallengeChip();
         }
 
         // ================= Pick feedback =================
@@ -1149,9 +577,9 @@ namespace CandyShop
 
         private void PunchChip(CandyTypeDefinition type)
         {
-            Transform chip = _orderChipsRow.Find("Chip_" + type.typeId);
-            if (chip != null)
-                StartCoroutine(PunchScale(chip));
+            OrderChip chip;
+            if (_chipsByType.TryGetValue(type.typeId, out chip))
+                StartCoroutine(PunchScale(chip.transform));
         }
 
         private IEnumerator PunchScale(Transform target)
@@ -1173,11 +601,9 @@ namespace CandyShop
             if (cur == null) return;
             for (int i = 0; i < cur.types.Count; i++)
             {
-                Transform chip = _orderChipsRow.Find("Chip_" + cur.types[i].typeId);
-                if (chip == null) continue;
-                Transform count = chip.Find("Count");
-                if (count != null)
-                    count.GetComponent<Text>().text = cur.types[i].LocalizedName + " x" + cur.remaining[i];
+                OrderChip chip;
+                if (_chipsByType.TryGetValue(cur.types[i].typeId, out chip))
+                    chip.SetCount(cur.types[i].LocalizedName, cur.remaining[i]);
             }
         }
 
@@ -1241,16 +667,124 @@ namespace CandyShop
         private IEnumerator ShowToastRoutine(string message, float delay)
         {
             if (delay > 0f) yield return new WaitForSeconds(delay);
-            var toast = UIKit.CreatePanel(null, "Toast", Color.white, spriteName: UIKit.PanelSprite);
-            toast.SetParent(_safeRoot, false);
-            toast.anchorMin = new Vector2(0.5f, 0.35f);
-            toast.anchorMax = new Vector2(0.5f, 0.35f);
-            toast.sizeDelta = new Vector2(900, 130);
-            toast.anchoredPosition = Vector2.zero;
-            var txt = UIKit.CreateText(toast, message, 38, UIKit.Cocoa);
-            UIKit.Stretch((RectTransform)txt.transform, toast);
+            var toast = Instantiate(_toastTemplate, _toastTemplate.parent);
+            toast.gameObject.SetActive(true);
+            var txt = toast.GetComponentInChildren<TMP_Text>();
+            if (txt != null) txt.text = message;
             yield return new WaitForSeconds(2.2f);
             Destroy(toast.gameObject);
+        }
+
+        // ================= Popups =================
+
+        private void ShowQuitConfirm()
+        {
+            if (_quitConfirm != null) _quitConfirm.SetActive(true);
+        }
+
+        // Confirmed 放弃本局: counts as a fail — stamina -3 once, then menu (spec 8.2).
+        private void ConfirmQuitRun()
+        {
+            _lastFailReason = "quit";
+            if (!_failPenaltyApplied)
+            {
+                _failPenaltyApplied = true;
+                // Stamina -3 (float) + fail coin penalty (supplements 2.0), both once.
+                _game.ConfirmFailPenalty();
+                PendingCoinPenaltyToast = _game.LastFailCoinPenalty;
+            }
+            _game.QuitRun();
+        }
+
+        // Leaving the Game Over screen without revive confirms the fail: stamina -3 (spec 8.2).
+        private void LeaveGameOver()
+        {
+            if (reasonIsFail(_lastFailReason) && !_failPenaltyApplied)
+            {
+                _failPenaltyApplied = true;
+                // Stamina -3 (float) + fail coin penalty (supplements 2.0), both once.
+                _game.ConfirmFailPenalty();
+                PendingCoinPenaltyToast = _game.LastFailCoinPenalty; // shown on the next menu load
+            }
+            _game.ReturnToMenu();
+        }
+
+        private static bool reasonIsFail(string reason)
+        {
+            return reason == "stars" || reason == "timeout" || reason == "quit";
+        }
+
+        private void ShowInsufficientInBuySheet()
+        {
+            // Keep the sheet open with Cancel live; disable only the +80-ad button (review P1).
+            if (_insufficientSheet == null) return;
+            var ads = AdServiceLocator.Service;
+            bool adReady = ads != null && ads.IsReady(AdPlacement.reward_coins);
+            _insufficientAdBtn.interactable = adReady;
+            _insufficientSheet.SetActive(true);
+        }
+
+        private void OpenBuySheet(PowerUpDefinition def)
+        {
+            _buySheetDef = def;
+            _buyTitle.text = string.Format(I18nService.Get("powerup_buy_title"), def.LocalizedName);
+            _buyPrice.text = string.Format(I18nService.Get("powerup_price"), def.buyCost);
+            _buyMessage.text = "";
+            bool afford = EconomyManager.Coins >= def.buyCost;
+            _buyButton.image.color = afford ? Color.white : new Color(0.82f, 0.62f, 0.66f);
+
+            // Spec 14: while an ad/sheet is up, the customer timer pauses (same as Pause).
+            if (_game.RunActive && !_game.Paused)
+            {
+                _game.SetPaused(true);
+                _pausedForBuySheet = true;
+            }
+            _buySheet.SetActive(true);
+        }
+
+        private void CloseBuySheet()
+        {
+            _buySheet.SetActive(false);
+            if (_insufficientSheet != null) _insufficientSheet.SetActive(false);
+            if (_pausedForBuySheet)
+            {
+                _pausedForBuySheet = false;
+                _game.SetPaused(false);
+            }
+            RefreshBadges();
+        }
+
+        private void ShowTutorial(int step)
+        {
+            _tutorialStep = step;
+            if (_tutorialSkip != null)
+                _tutorialSkip.gameObject.SetActive(step >= 2); // no skip on step 1
+            _tutorialPopup.SetActive(true);
+            switch (step)
+            {
+                case 1:
+                    _tutorialBody.text = I18nService.Get("tutorial_1");
+                    SetButtonText(_tutorialNext, I18nService.Get("tutorial_next"));
+                    TutorialSpotlightAdapter.Show(_orderChipsRow); // point at order chips + pile
+                    break;
+                case 2:
+                    _tutorialBody.text = I18nService.Get("tutorial_2");
+                    TutorialSpotlightAdapter.Show(_starsAnchor.rectTransform); // stars restore rule
+                    break;
+                default:
+                    _tutorialBody.text = I18nService.Get("tutorial_3");
+                    TutorialSpotlightAdapter.Show(_bottomBar); // power-up thumb zone
+                    break;
+            }
+        }
+
+        private void FinishTutorial()
+        {
+            TutorialSpotlightAdapter.Hide();
+            SaveDataService.Current.tutorialDone = true;
+            SaveDataService.Save();
+            _tutorialPopup.SetActive(false);
+            BeginRun();
         }
 
         // ================= Serve / game over =================
@@ -1413,70 +947,6 @@ namespace CandyShop
                 (newBest ? "\n" + I18nService.Get("game_over_record") : "");
         }
 
-        // Shift Over screen: after a successful serve with stamina < 1 for the next guest.
-        // No revive, no fail -3 (spec 8.2).
-        private void BuildShiftOverPopup(Transform parent)
-        {
-            var dim = UIKit.CreatePanel(parent, "ShiftOverDim", new Color(0, 0, 0, 0.6f));
-            UIKit.Stretch(dim, parent);
-            dim.GetComponent<Image>().raycastTarget = true;
-            _shiftOverPopup = dim.gameObject;
-
-            var panel = UIKit.CreatePanel(dim, "ShiftOverPanel", Color.white, spriteName: UIKit.PanelSprite);
-            panel.sizeDelta = new Vector2(860, 760);
-            panel.anchoredPosition = Vector2.zero;
-
-            _shiftOverTitle = UIKit.CreateText(panel, "", 80, UIKit.SkyMint);
-            _shiftOverTitle.name = "ShiftOverTitle";
-            _shiftOverTitle.rectTransform.anchoredPosition = new Vector2(0, 220);
-
-            _shiftOverBody = UIKit.CreateText(panel, "", 44, UIKit.Cocoa);
-            _shiftOverBody.name = "ShiftOverBody";
-            var brt = (RectTransform)_shiftOverBody.transform;
-            brt.sizeDelta = new Vector2(760, 120);
-            brt.anchoredPosition = new Vector2(0, 90);
-
-            // Same stat lines as Game Over: served / coins / best (+ new record) — spec 10.5.
-            _shiftOverStats = UIKit.CreateText(panel, "", 40, UIKit.Cocoa, TextAnchor.UpperCenter);
-            _shiftOverStats.name = "ShiftOverStats";
-            var srt = (RectTransform)_shiftOverStats.transform;
-            srt.sizeDelta = new Vector2(760, 260);
-            srt.anchoredPosition = new Vector2(0, -80);
-
-            _shiftOverMenuBtn = UIKit.CreateButton(panel, "", new Vector2(700, 140), UIKit.SugarPink);
-            _shiftOverMenuBtn.transform.localPosition = new Vector3(0, -300, 0);
-            _shiftOverMenuBtn.onClick.AddListener(() => _game.ReturnToMenu());
-
-            // Opt-in watch-ad stamina (supplements 2.0): restore, then the player can
-            // return to the menu and start again — never auto-enter the Game scene.
-            var stamAdBtn = UIKit.CreateButton(panel, "", new Vector2(700, 120), Color.white, 34,
-                spriteName: UIKit.ButtonSecondary);
-            stamAdBtn.name = "ShiftOverStaminaAd";
-            stamAdBtn.transform.localPosition = new Vector3(0, -160, 0);
-            stamAdBtn.onClick.AddListener(() =>
-            {
-                var ads = AdServiceLocator.Service;
-                if (ads == null || !ads.IsReady(AdPlacement.reward_stamina)) return;
-                ads.ShowRewarded(AdPlacement.reward_stamina, ok =>
-                {
-                    if (!ok) return;
-                    var cfg = _game.staminaConfig;
-                    StaminaService.GrantHardClamped(cfg != null ? cfg.staminaAdGrant : 5);
-                    RefreshStaminaLabel();
-                    RefreshShiftOverAdButton();
-                });
-            });
-            _shiftOverAdBtn = stamAdBtn;
-
-            _shiftOverTitle.text = I18nService.Get("stamina_shift_title");
-            _shiftOverBody.text = I18nService.Get("stamina_shift_body");
-            SetButtonText(_shiftOverMenuBtn, I18nService.Get("btn_main_menu"));
-
-            _shiftOverPopup.SetActive(false);
-        }
-
-        private Button _shiftOverAdBtn;
-
         // Ad button only when an ad is ready (never promise stamina, supplements 2.0).
         private void RefreshShiftOverAdButton()
         {
@@ -1485,7 +955,7 @@ namespace CandyShop
             bool ready = ads != null && ads.IsReady(AdPlacement.reward_stamina);
             _shiftOverAdBtn.gameObject.SetActive(ready);
             if (!ready) return;
-            var txt = _shiftOverAdBtn.GetComponentInChildren<Text>();
+            var txt = _shiftOverAdBtn.GetComponentInChildren<TMP_Text>();
             if (txt != null)
             {
                 var cfg = _game.staminaConfig;
@@ -1501,6 +971,13 @@ namespace CandyShop
             if (_buySheet != null && _buySheet.activeSelf) CloseBuySheet();
             else if (_insufficientSheet != null) _insufficientSheet.SetActive(false);
             if (_shiftOverPopup != null) _shiftOverPopup.SetActive(false);
+        }
+
+        private static void SetButtonText(Button button, string value)
+        {
+            if (button == null) return;
+            var txt = button.GetComponentInChildren<TMP_Text>();
+            if (txt != null) txt.text = value;
         }
     }
 }

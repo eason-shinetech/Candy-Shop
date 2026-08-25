@@ -91,11 +91,19 @@ Always prepend the **style lock**. Then append the line in the Prompt column.
 
 ### 4.3 Candy order icons (2D)
 
-Do **not** generate a fixed 10-name list. After OpenCode writes `docs/generated/candy-catalog.md`, make **one 256×256 transparent PNG per CandyTypeId**.
+**Source of truth:** `Assets/Art/Candy Icon/`. Do **not** generate a fixed 10-name list, and do not treat rendered `Resources/UI/Candies/icon_candy_*` (or family fallbacks) as canonical.
 
-Prefer a **screenshot of the 3D mesh** (same lighting as GameScene) cropped on cream/`#FFF6E8`, then a light outline — this matches the kit better than inventing new candy drawings.
+Each catalog candy uses the PNG whose filename matches its prefab name:
 
-If generating instead of screenshot: same style-lock prefix, describe that exact mesh (shape + colors from the model). File: `Assets/Art/UI/Candies/icon_candy_<CandyTypeId>.png`.
+| Prefab (`Assets/Prefabs/Candy`) | Icon (`Assets/Art/Candy Icon`) |
+| --- | --- |
+| `Chocolate Bar.prefab` | `Chocolate Bar.png` |
+| `Donut A1.prefab` | `Donut A1.png` |
+| `Cotton Candy B2.prefab` | `Cotton Candy B2.png` |
+
+Skip scenery in that folder that is **not** a candy type: `Stick`, `Icecream Plate`, `Lollipop Ground *`.
+
+If a catalog type is missing its PNG, that is an art gap — do not invent a replacement drawing or fall back to a sibling-family icon as the shipped thumb.
 
 ### 4.4 Customer portraits (queue)
 

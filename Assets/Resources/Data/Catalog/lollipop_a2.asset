@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
+  m_Name: lollipop_a2
+  m_EditorClassIdentifier: 
+  typeId: lollipop_a2
+  displayNameZh: "\u68D2\u68D2\u7CD6"
+  displayNameEn: Lollipop
+  prefab: {fileID: 1872501124086150652, guid: 8586a639f062f0a45b0a1b465dddcefb, type: 3}
+  isStarter: 0
+  isSpecial: 0
+  icon: {fileID: 21300000, guid: a6b18fc4b74b8bb4e9a86c6a92a4b1d3, type: 3}
+  chipColor: {r: 0.49411765, g: 0.8784314, b: 0.7764706, a: 1}

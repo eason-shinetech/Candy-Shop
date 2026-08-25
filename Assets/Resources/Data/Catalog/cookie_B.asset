@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
-  m_Name: cookie_B
+  m_Name: cookie_b
   m_EditorClassIdentifier: 
-  typeId: cookie_B
+  typeId: cookie_b
   displayNameZh: "\u66F2\u5947\u7CD6"
   displayNameEn: Cookie
-  prefab: {fileID: 8740477331969636109, guid: 685b6782a82ac384bb1a8ef8a76206a8, type: 3}
+  prefab: {fileID: 6197048972751904838, guid: 275d8c415ae52714ab57823b2d7f716d, type: 3}
   isStarter: 0
   isSpecial: 0
-  icon: {fileID: 0}
-  chipColor: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}
+  icon: {fileID: 21300000, guid: efa5ea6ff44ff294e96dca7f5ff778a9, type: 3}
+  chipColor: {r: 1, g: 0.56078434, b: 0.72156864, a: 1}

@@ -97,16 +97,17 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 - Import as UI sprites. No baked Chinese/English in PNGs (TMP + i18n draws text).
 - Reject any asset that looks realistic or from another style.
 
-**Done when:** Main menu background + HUD icons + **one thumb per catalog candy** + 6 portraits sit in `Assets/Art/UI` and look like one kit.
+**Done when:** Main menu background + HUD icons + 6 portraits sit in `Assets/Art/UI`, and **one thumb per catalog candy** sits in `Assets/Art/Candy Icon` (`<PrefabName>.png`), all looking like one kit.
 
 ### Task 3: Candy pile mapping
 
-- Import `Candy/` models. If binaries are missing, greybox spheres **temporarily**, tagged with `CandyTypeId`, and write a short `MISSING_ASSETS.md` in `docs/`.
-- Build catalog from kit: **each distinct pickable candy mesh = one type = one recipe** (3 starters free). Write `docs/generated/candy-catalog.md`. Exclude terrain/cloud.
-- `CandyInstance` on each pickable mesh: id, collider, hide/remove API.
+- Import the Art/Candy kit into `Assets/Art/Candy/` (FBX/GLB). Playable prefabs live in `Assets/Prefabs/Candy/`. If binaries are missing, greybox spheres **temporarily**, tagged with `CandyTypeId`, and write a short `MISSING_ASSETS.md` in `docs/`.
+- Build catalog from **prefabs**, not the FBX mesh list: **each pickable candy prefab = one type = one recipe** (3 starters free). Write `docs/generated/candy-catalog.md`. Exclude scenery by name (`plate`, `ground`, `stick`, …).
+- Bind each type's UI icon from `Assets/Art/Candy Icon/<PrefabName>.png`.
+- `CandyInstance` on each pickable prefab: id, collider, hide/remove API.
 - Click: touch raycast to `CandyInstance` (ignore UI).
 
-**Done when:** Catalog size equals distinct candy meshes; tapping a candy logs its type and hides it.
+**Done when:** Catalog size equals pickable candy prefabs; tapping a candy logs its type and hides it; chips/recipe rows use the Candy Icon PNG.
 
 ### Task 4: Orders, timer, stars
 

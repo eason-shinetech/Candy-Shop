@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CandyShop
 {
-    // One candy mesh from the 3D kit = one CandyTypeId.
+    // One prefab under Assets/Prefabs/Candy = one CandyTypeId.
     [CreateAssetMenu(fileName = "CandyType_", menuName = "CandyShop/Candy Type Definition")]
     public class CandyTypeDefinition : ScriptableObject
     {
@@ -15,7 +15,7 @@ namespace CandyShop
         public string LocalizedName =>
             I18nService.Language == "en" && !string.IsNullOrEmpty(displayNameEn) ? displayNameEn : displayNameZh;
 
-        [Tooltip("Extracted prefab of the candy mesh used to fill the pile.")]
+        [Tooltip("Prefab from Assets/Prefabs/Candy used to fill the pile.")]
         public GameObject prefab;
 
         [Tooltip("Starters are always unlocked and have no shop recipe.")]
@@ -24,7 +24,7 @@ namespace CandyShop
         [Tooltip("Special edition (same mesh, different color); unlocked via collection milestones only.")]
         public bool isSpecial;
 
-        [Tooltip("Optional generated UI icon; may be null in MVP (colored dot fallback).")]
+        [Tooltip("UI thumb from Assets/Art/Candy Icon/<PrefabName>.png.")]
         public Sprite icon;
 
         [Tooltip("Fallback tint used by HUD chips when no icon exists.")]

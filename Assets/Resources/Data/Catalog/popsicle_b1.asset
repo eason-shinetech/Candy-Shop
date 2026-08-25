@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a8b3d1c600ca554880b439df7a71940, type: 3}
+  m_Name: popsicle_b1
+  m_EditorClassIdentifier: 
+  typeId: popsicle_b1
+  displayNameZh: "\u96EA\u7CD5\u7CD6"
+  displayNameEn: Ice Pop
+  prefab: {fileID: 2416310535955501691, guid: 212f1f8f79f6ef741bd3aa5ea015e43e, type: 3}
+  isStarter: 0
+  isSpecial: 0
+  icon: {fileID: 21300000, guid: 121f3823fde839e45b43c80faf86ae68, type: 3}
+  chipColor: {r: 0.654902, g: 0.54509807, b: 0.98039216, a: 1}

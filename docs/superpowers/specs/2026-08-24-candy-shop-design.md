@@ -107,39 +107,42 @@ Daily **stamina (体力)** is the session cap: **20 per local date**. Full rules
 
 ## 4. Candy types and recipes
 
-### 4.1 Source of truth = the 3D kit (not a made-up list)
+### 4.1 Source of truth = Art/Candy prefabs (not a made-up list)
 
-Recipe count is **not** a fixed 7 or 10. It is derived from `Candy/Premium` after Unity imports the models.
+Recipe count is **not** a fixed 7 or 10. It is derived from the **playable candy prefabs** of the Art/Candy kit.
 
-**Rule:** every distinct **pickable candy mesh** in the kit is one `CandyTypeId` and one recipe (except the 3 starters, which are unlocked for free and have no shop recipe).
+**Rule:** every pickable candy prefab is one `CandyTypeId` and one recipe (except the 3 starters, which are unlocked for free and have no shop recipe).
+
+| Folder | Role |
+| --- | --- |
+| `Assets/Art/Candy` | 3D kit (FBX/GLB + textures + materials). Source meshes the prefabs are built from. Not enumerated for the catalog. |
+| `Assets/Prefabs/Candy` | **Candy-type source of truth.** One prefab = one `CandyTypeId`. `CandyShopBootstrapper.BuildCandyCatalog` enumerates this folder. |
+| `Assets/Art/Candy Icon` | **Candy-icon source of truth.** One PNG per type; filename = prefab name (e.g. `Chocolate Bar.png`). Used on order chips, recipe rows, and thumbs. |
 
 | Include as a candy type | Exclude |
 | --- | --- |
-| Each unique mesh (or mesh + material variant) in `candy_kit.fbx` / `candy_kit.glb` that is a candy prop | `terrain_kit`, `cloud_kit` |
-| Extra candy materials in the folder (`Chocolate.mat`, `Waffer.mat`) if they belong to distinct candy meshes | Shop furniture, terrain, clouds, lights, cameras |
-| Color / shape variants that are **separate objects** in the FBX (e.g. Candy_setA vs Av2 vs Balloon_A) | Duplicate instances of the **same** mesh used only to fill the pile |
+| Each candy prefab under `Assets/Prefabs/Candy` | `terrain_kit`, `cloud_kit` (stay in `Assets/Art/Candy`) |
+| Color / shape variants that are **separate prefabs** (e.g. `Donut A1` vs `Donut A2`) | Shop furniture, plates, grounds, sticks, signs, melted props (exclude by name keyword: `fence`, `plate`, `ground`, `sign`, `stick`, `melted`) |
+|  | Duplicate **instances** of the same prefab used only to fill the pile |
 
-Pile instances: many copies of `lollipop_red` in the scene still count as **one** type / **one** recipe.
+Pile instances: many copies of `Lollipop A1` in the scene still count as **one** type / **one** recipe.
 
-Hint from current texture names (not a final count — count meshes after import):
-
-- Atlases: `Candy_setA`, `Av2`, `Av3`, `Candy_setB`, `Bv2`, `Candy_setC`–`G`
-- `Balloon_A` / `B` / `C`
-- `Chocolate`, `Waffer`
+`CandyTypeId` = sanitized prefab file name, lowercased with `_` separators (`Chocolate Bar` → `chocolate_bar`).
 
 OpenCode **must** after import:
 
-1. List candy meshes (Editor script `CandyCatalogBuilder` is fine).
-2. Sort by hierarchy name.
-3. Write `docs/generated/candy-catalog.md` with: mesh name, proposed `CandyTypeId`, starter or recipe, cost.
+1. Confirm playable prefabs exist under `Assets/Prefabs/Candy` (do not re-extract from `candy_kit.fbx` on each bootstrap).
+2. Sort by prefab file name.
+3. Write `docs/generated/candy-catalog.md` with: prefab name, `CandyTypeId`, starter or recipe, cost.
 4. Create one `CandyTypeDefinition` asset per row and one `RecipeDefinition` per non-starter row.
+5. Bind each type's UI icon from `Assets/Art/Candy Icon/<PrefabName>.png`. Do not generate replacement thumbs into `Assets/Art/UI/Candies` or `Resources/UI/Candies` as the canonical set.
 
-If FBX/GLB binaries are missing, stop and list missing files. Do not keep the old 10-name placeholder catalog as production data.
+If the prefab folder is empty, stop and list missing files. Do not keep a handmade 10-name placeholder catalog as production data.
 
 ### 4.2 Starters vs recipes
 
-- **Exactly 3 starters**, always free. Default: first 3 candy meshes in sorted name order. If `Chocolate` and `Waffer` meshes exist, prefer those two plus the first remaining mesh as the 3 starters (still exactly 3).
-- **Every other candy mesh = one shop recipe** that unlocks that type.
+- **Exactly 3 starters**, always free. Default: first 3 candy prefabs in sorted name order. If `Chocolate` and `Waffer` prefabs exist, prefer those two plus the first remaining prefab as the 3 starters (still exactly 3).
+- **Every other candy prefab = one shop recipe** that unlocks that type.
 - Orders may only request **unlocked** types (starters + bought recipes).
 - Display names: **zh and en** on each catalog row (i18n). Do not show raw FBX names in UI.
 
@@ -162,7 +165,7 @@ Example: 7 recipes → 120, 180, 240, 320 would be wrong; use the formula (120, 
 
 ### 4.4 Scene pile
 
-Tag each scene instance with the `CandyTypeId` of its source mesh. The Game scene contains a **pre-placed pile** of those meshes (many copies per type).
+Tag each scene instance with the `CandyTypeId` of its source prefab. The Game scene contains a **pre-placed pile** of those prefabs (many copies per type).
 
 - Tapping a candy **removes** it from the pile (correct or wrong).
 - When a type runs out in the pile, that type cannot be picked until restock.
@@ -629,9 +632,15 @@ No cloud, no account.
 
 Folder `Candy/` currently contains Unity `.meta` files and two materials (`Waffer.mat`, `Chocolate.mat`). Expected binaries (`candy_kit.fbx` / `.glb`, textures `.png`, `terrain_kit`, `cloud_kit`) may be missing from git.
 
+Asset roles (do not mix):
+
+- `Assets/Art/Candy` — 3D kit (models, textures, materials).
+- `Assets/Prefabs/Candy` — playable candy prefabs; **source of truth for candy types**.
+- `Assets/Art/Candy Icon` — 2D thumbs; **source of truth for candy UI icons** (`<PrefabName>.png`).
+
 OpenCode must:
 
-1. Confirm binaries exist on disk after Unity refresh.
+1. Confirm prefabs exist under `Assets/Prefabs/Candy` and matching icons under `Assets/Art/Candy Icon` after Unity refresh.
 2. If missing, stop scene assembly and document the missing files; do not fake candies with cubes except as a **temporary** greybox tagged with the same `CandyTypeId` so systems can be tested.
 
 Move or copy imported kits into `Assets/Art/Candy/` if Unity requires assets under `Assets/`. Keep original `Candy/` as source if that is the artist drop folder; the plan covers the copy step.

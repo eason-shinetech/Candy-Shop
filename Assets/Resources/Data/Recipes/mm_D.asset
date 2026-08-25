@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3842d8f7a6acfed43b5b5473d11f0232, type: 3}
-  m_Name: mm_D
+  m_Name: mm_d
   m_EditorClassIdentifier: 
-  recipeId: mm_D
+  recipeId: mm_d
   candyType: {fileID: 11400000, guid: 35f8a25d3a6176f4ba48f030e46f71b8, type: 2}
   cost: 8000
   starRank: 4

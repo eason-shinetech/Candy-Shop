@@ -17,12 +17,12 @@ namespace CandyShop.EditorTools
     // Unity.exe -batchmode -projectPath <path> -executeMethod CandyShop.EditorTools.CandyShopBootstrapper.RunAll -quit
     public static class CandyShopBootstrapper
     {
-        private const string KitFbxPath = "Assets/Art/Candy/candy_kit.fbx";
         private const string DataRoot = "Assets/Resources/Data";
         private const string CatalogDir = DataRoot + "/Catalog";
         private const string RecipesDir = DataRoot + "/Recipes";
         private const string PowerUpsDir = DataRoot + "/PowerUps";
         private const string PrefabCandyDir = "Assets/Prefabs/Candy";
+        private const string CandyIconDir = "Assets/Art/Candy Icon";
         private const string VfxDir = "Assets/Prefabs/VFX";
 
         [MenuItem("CandyShop/Bootstrap Project")]
@@ -42,6 +42,18 @@ namespace CandyShop.EditorTools
             WriteGeneratedDocs(catalog);
             AssetDatabase.SaveAssets();
             Debug.Log("CandyShopBootstrapper: done. Catalog size = " + catalog.Count);
+        }
+
+        [MenuItem("CandyShop/Rebuild Candy Catalog")]
+        public static void RebuildCandyCatalog()
+        {
+            EnsureFolders();
+            AssetDatabase.Refresh();
+            var catalog = BuildCandyCatalog();
+            WriteGeneratedDocs(catalog);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("CandyShopBootstrapper: catalog rebuilt. Size = " + catalog.Count);
         }
 
         // ---------------- Folders / pipeline / player ----------------
@@ -123,7 +135,7 @@ namespace CandyShop.EditorTools
 
         private class CatalogEntry
         {
-            public string meshName;
+            public string prefabName;
             public string typeId;
             public string nameZh;
             public string nameEn;
@@ -145,18 +157,17 @@ namespace CandyShop.EditorTools
             { "bean", "糖果豆" }, { "ring", "圈圈糖" }, { "swirl", "漩涡糖" },
             { "strawberry", "草莓糖" }, { "cherry", "樱桃糖" }, { "berry", "莓果糖" },
             { "fruit", "水果糖" }, { "icecream", "冰淇淋糖" }, { "icecreamcone", "甜筒糖" },
-            { "milkshake", "奶昔糖" }, { "mm_", "巧克力豆" }, { "pretzel", "蝴蝶脆饼糖" },
-            { "swiss_roll", "瑞士卷糖" }, { "sweet_bread", "甜面包糖" }, { "sandwich", "夹心糖" }
+            { "milkshake", "奶昔糖" }, { "milk", "奶昔糖" }, { "mm", "巧克力豆" }, { "pretzel", "蝴蝶脆饼糖" },
+            { "swiss_roll", "瑞士卷糖" }, { "swiss roll", "瑞士卷糖" },
+            { "sweet_bread", "甜面包糖" }, { "sweet bread", "甜面包糖" },
+            { "cotton", "棉花糖" }, { "sandwich", "夹心糖" }, { "sandwish", "夹心糖" }
         };
 
-        // Scenery / furniture props inside the kit that are not pickable candies (spec section 4.1).
-        private static readonly HashSet<string> ExcludedMeshes = new HashSet<string>
+        // Scenery / furniture props shipped alongside the candy prefabs that are
+        // not pickable candies (spec section 4.1).
+        private static readonly string[] ExcludedPrefabKeywords =
         {
-            "candy_fence_A", "candy_fence_B",
-            "icecream_plate",
-            "lollipop_ground", "lollipop_groundv2", "lollipop_groundv3",
-            "sign", "stick",
-            "melted_icecream", "melted_icecreamv2", "melted_icecreamv3"
+            "fence", "plate", "ground", "sign", "stick", "melted"
         };
 
         // English display names per family (i18n spec: names follow the active locale).
@@ -172,71 +183,70 @@ namespace CandyShop.EditorTools
             { "bean", "Candy Bean" }, { "ring", "Ring Candy" }, { "swirl", "Swirl Candy" },
             { "strawberry", "Strawberry" }, { "cherry", "Cherry" }, { "berry", "Berry" },
             { "fruit", "Fruit Candy" }, { "icecream", "Ice Cream" }, { "icecreamcone", "Cone" },
-            { "milkshake", "Milkshake" }, { "mm_", "Choco Bean" }, { "pretzel", "Pretzel" },
-            { "swiss_roll", "Swiss Roll" }, { "sweet_bread", "Sweet Bread" }, { "sandwich", "Sandwich" }
+            { "milkshake", "Milkshake" }, { "milk", "Milkshake" }, { "mm", "Choco Bean" }, { "pretzel", "Pretzel" },
+            { "swiss_roll", "Swiss Roll" }, { "swiss roll", "Swiss Roll" },
+            { "sweet_bread", "Sweet Bread" }, { "sweet bread", "Sweet Bread" },
+            { "cotton", "Cotton Candy" }, { "sandwich", "Sandwich" }, { "sandwish", "Sandwich" }
         };
 
         private static string ToEn(string meshName, int fallbackIndex)
         {
-            var lower = meshName.ToLowerInvariant();
-            foreach (var kvp in EnMap)
-                if (lower.Contains(kvp.Key))
-                    return kvp.Value;
-            return "Candy " + (fallbackIndex + 1);
+            return LookupName(meshName, EnMap) ?? ("Candy " + (fallbackIndex + 1));
         }
 
         private static string ToZh(string meshName, int fallbackIndex)
         {
+            return LookupName(meshName, ZhMap) ?? ("糖果 " + (fallbackIndex + 1));
+        }
+
+        // Longest substring wins so "Cotton Candy" maps to cotton, not candy.
+        private static string LookupName(string meshName, Dictionary<string, string> map)
+        {
             var lower = meshName.ToLowerInvariant();
-            foreach (var kvp in ZhMap)
-                if (lower.Contains(kvp.Key))
-                    return kvp.Value;
-            return "糖果 " + (fallbackIndex + 1);
+            string best = null;
+            int bestLen = -1;
+            foreach (var kvp in map)
+            {
+                if (lower.Contains(kvp.Key) && kvp.Key.Length > bestLen)
+                {
+                    best = kvp.Value;
+                    bestLen = kvp.Key.Length;
+                }
+            }
+            return best;
         }
 
         private static List<CatalogEntry> BuildCandyCatalog()
         {
             // Clean previous generated data so re-runs stay deterministic.
-            foreach (var dir in new[] { CatalogDir, RecipesDir, PrefabCandyDir })
+            // NOTE: PrefabCandyDir is the source of truth for candy types and must NOT be cleaned here.
+            foreach (var dir in new[] { CatalogDir, RecipesDir })
             {
                 if (!Directory.Exists(dir)) continue;
                 foreach (var f in Directory.GetFiles(dir))
                     if (!f.EndsWith(".meta")) AssetDatabase.DeleteAsset(f.Replace('\\', '/'));
             }
 
-            var kit = AssetDatabase.LoadAssetAtPath<GameObject>(KitFbxPath);
-            if (kit == null)
-                throw new Exception("candy_kit.fbx missing at " + KitFbxPath + " — cannot build catalog.");
+            if (!Directory.Exists(PrefabCandyDir))
+                throw new Exception("Prefab folder missing at " + PrefabCandyDir + " — cannot build catalog.");
 
-            // Collect one representative renderer per distinct mesh; exclude terrain/cloud props.
-            var seen = new HashSet<int>();
-            var representatives = new Dictionary<string, Transform>();
-            foreach (var mf in kit.GetComponentsInChildren<MeshFilter>(true))
-            {
-                if (mf.sharedMesh == null) continue;
-                if (IsExcluded(mf.transform)) continue;
-                if (ExcludedMeshes.Contains(mf.sharedMesh.name)) continue;
-                if (mf.sharedMesh.name.ToLowerInvariant().Contains("_low")) continue; // LOD variants
-                if (!seen.Add(mf.sharedMesh.GetInstanceID())) continue;
-                if (!representatives.ContainsKey(mf.sharedMesh.name))
-                    representatives[mf.sharedMesh.name] = mf.transform;
-            }
-            foreach (var smr in kit.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-            {
-                if (smr.sharedMesh == null || IsExcluded(smr.transform)) continue;
-                if (ExcludedMeshes.Contains(smr.sharedMesh.name)) continue;
-                if (smr.sharedMesh.name.ToLowerInvariant().Contains("_low")) continue;
-                if (!representatives.ContainsKey(smr.sharedMesh.name))
-                    representatives[smr.sharedMesh.name] = smr.transform;
-            }
+            // One prefab under Assets/Prefabs/Candy = one candy type. Scenery props
+            // (plates, grounds, sticks, ...) are excluded by name.
+            var prefabNames = Directory.GetFiles(PrefabCandyDir, "*.prefab")
+                .Select(Path.GetFileNameWithoutExtension)
+                .Where(n => !n.ToLowerInvariant().Contains("_special"))
+                .Where(n => !ExcludedPrefabKeywords.Any(k => n.ToLowerInvariant().Contains(k)))
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-            var sortedNames = representatives.Keys.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+            if (prefabNames.Count == 0)
+                throw new Exception("No candy prefabs found in " + PrefabCandyDir + " — cannot build catalog.");
 
-            // Starters: prefer Chocolate/Waffer meshes, then fill to exactly 3 in sorted order.
-            var starterNames = sortedNames
+            // Starters: prefer Chocolate/Waffer prefabs, then fill to exactly 3 in sorted order.
+            var starterNames = prefabNames
                 .Where(n => n.ToLowerInvariant().Contains("chocolate") || n.ToLowerInvariant().Contains("waffer"))
                 .Take(2).ToList();
-            foreach (var n in sortedNames)
+            foreach (var n in prefabNames)
             {
                 if (starterNames.Count >= 3) break;
                 if (!starterNames.Contains(n)) starterNames.Add(n);
@@ -250,30 +260,21 @@ namespace CandyShop.EditorTools
 
             // Star-rank assignment (supplements 2.0): deterministic equal bands across the
             // sorted non-starter catalog, so rank 1..5 each get ~1/5 of the recipes.
-            int totalRecipes = sortedNames.Count - starterNames.Count;
+            int totalRecipes = prefabNames.Count - starterNames.Count;
 
             int zhIndex = 0;
             int recipeIndex = 0;
-            foreach (var meshName in sortedNames)
+            foreach (var prefabName in prefabNames)
             {
-                var src = representatives[meshName];
-                string typeId = Sanitize(meshName);
+                string typeId = Sanitize(prefabName).ToLowerInvariant();
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabCandyDir}/{prefabName}.prefab");
+                if (prefab == null)
+                {
+                    Debug.LogWarning("CandyShopBootstrapper: cannot load prefab for " + prefabName + ", skipped.");
+                    continue;
+                }
 
-                // Extract an isolated prefab of this candy node.
-                var clone = UnityEngine.Object.Instantiate(src.gameObject);
-                clone.transform.SetParent(null, false);
-                var srcLossy = src.lossyScale;
-                clone.transform.localPosition = Vector3.zero;
-                clone.transform.localRotation = src.localRotation;
-                clone.transform.localScale = srcLossy;
-                foreach (var col in clone.GetComponentsInChildren<Collider>()) UnityEngine.Object.DestroyImmediate(col);
-                foreach (var rb in clone.GetComponentsInChildren<Rigidbody>()) UnityEngine.Object.DestroyImmediate(rb);
-
-                string prefabPath = $"{PrefabCandyDir}/Candy_{typeId}.prefab";
-                var prefab = PrefabUtility.SaveAsPrefabAsset(clone, prefabPath);
-                UnityEngine.Object.DestroyImmediate(clone);
-
-                bool isStarter = starterNames.Contains(meshName);
+                bool isStarter = starterNames.Contains(prefabName);
                 int starRank = 1;
                 if (!isStarter)
                 {
@@ -283,10 +284,10 @@ namespace CandyShop.EditorTools
 
                 var entry = new CatalogEntry
                 {
-                    meshName = meshName,
+                    prefabName = prefabName,
                     typeId = typeId,
-                    nameZh = ToZh(meshName, zhIndex),
-                    nameEn = ToEn(meshName, zhIndex),
+                    nameZh = ToZh(prefabName, zhIndex),
+                    nameEn = ToEn(prefabName, zhIndex),
                     isStarter = isStarter,
                     // Star-rank price table replaces the old linear formula (supplements 2.0).
                     cost = isStarter ? -1 : RecipeDefinition.CostForRank(starRank),
@@ -300,7 +301,10 @@ namespace CandyShop.EditorTools
                 def.displayNameEn = entry.nameEn;
                 def.prefab = prefab;
                 def.isStarter = isStarter;
+                def.icon = LoadCandyIcon(prefabName);
                 def.chipColor = palette[entries.Count % palette.Length];
+                if (def.icon == null)
+                    Debug.LogWarning("CandyShopBootstrapper: missing icon at " + CandyIconDir + "/" + prefabName + ".png");
                 AssetDatabase.CreateAsset(def, $"{CatalogDir}/{entry.typeId}.asset");
 
                 if (!isStarter)
@@ -339,16 +343,17 @@ namespace CandyShop.EditorTools
                     AssetDatabase.DeleteAsset(f.Replace('\\', '/'));
 
             // (base typeId, zh suffix, en suffix, track) — 4 owned-track + 4 sign-in-track.
+            // typeIds derive from prefab names under Assets/Prefabs/Candy.
             var plan = new[]
             {
-                new[] { "lollipop_A", "薄荷特别版", " Mint Special", "0" },
-                new[] { "donut_A", "草莓特别版", " Strawberry Special", "0" },
-                new[] { "cupcake_A", "葡萄特别版", " Grape Special", "0" },
-                new[] { "icecream_A", "柠檬特别版", " Lemon Special", "0" },
-                new[] { "cookie_A", "薄荷特别版", " Mint Special", "1" },
+                new[] { "lollipop_a1", "薄荷特别版", " Mint Special", "0" },
+                new[] { "donut_a1", "草莓特别版", " Strawberry Special", "0" },
+                new[] { "cupcake_a", "葡萄特别版", " Grape Special", "0" },
+                new[] { "icecream_a1", "柠檬特别版", " Lemon Special", "0" },
+                new[] { "cookie_a", "薄荷特别版", " Mint Special", "1" },
                 new[] { "jelly", "莓果特别版", " Berry Special", "1" },
-                new[] { "milkshake_A", "可可特别版", " Cocoa Special", "1" },
-                new[] { "cake_big", "云朵特别版", " Cloud Special", "1" }
+                new[] { "milk_shake_a", "可可特别版", " Cocoa Special", "1" },
+                new[] { "small_cake", "云朵特别版", " Cloud Special", "1" }
             };
 
             var tints = new[]
@@ -400,6 +405,7 @@ namespace CandyShop.EditorTools
                 def.prefab = specialPrefab;
                 def.isStarter = false;
                 def.isSpecial = true;
+                def.icon = LoadCandyIcon(baseEntry.prefabName);
                 def.chipColor = tint;
                 AssetDatabase.CreateAsset(def, $"{CatalogDir}/{def.typeId}.asset");
 
@@ -415,19 +421,6 @@ namespace CandyShop.EditorTools
             }
         }
 
-        private static bool IsExcluded(Transform t)
-        {
-            while (t != null)
-            {
-                var lower = t.name.ToLowerInvariant();
-                if (lower.Contains("terrain") || lower.Contains("cloud") ||
-                    lower.Contains("light") || lower.Contains("camera"))
-                    return true;
-                t = t.parent;
-            }
-            return false;
-        }
-
         private static string Sanitize(string name)
         {
             var sb = new StringBuilder();
@@ -435,6 +428,12 @@ namespace CandyShop.EditorTools
                 sb.Append(char.IsLetterOrDigit(c) ? c : '_');
             var s = sb.ToString().Trim('_');
             return string.IsNullOrEmpty(s) ? "Candy" : s;
+        }
+
+        private static Sprite LoadCandyIcon(string prefabName)
+        {
+            if (string.IsNullOrEmpty(prefabName)) return null;
+            return AssetDatabase.LoadAssetAtPath<Sprite>($"{CandyIconDir}/{prefabName}.png");
         }
 
         // ---------------- Power-ups + VFX ----------------
@@ -687,15 +686,17 @@ namespace CandyShop.EditorTools
                 "Project pinned to 6000.0.77f1 per project decision.\n");
 
             var sb = new StringBuilder();
-            sb.AppendLine("# Candy Catalog (generated from Assets/Art/Candy/candy_kit.fbx)");
+            sb.AppendLine("# Candy Catalog (generated from Assets/Prefabs/Candy)");
+            sb.AppendLine();
+            sb.AppendLine("> Icons: `Assets/Art/Candy Icon/<PrefabName>.png`.");
             sb.AppendLine();
             // i18n spec section 3: catalog rows carry name_zh / name_en so no FBX names reach the HUD.
             // Supplements 2.0: rank + special columns document the star-rank economy.
-            sb.AppendLine("| Mesh | CandyTypeId | Starter / Recipe | Rank | Cost | name_zh | name_en |");
+            sb.AppendLine("| Prefab | CandyTypeId | Starter / Recipe | Rank | Cost | name_zh | name_en |");
             sb.AppendLine("| --- | --- | --- | --- | --- | --- | --- |");
             foreach (var e in catalog)
             {
-                sb.AppendLine($"| {e.meshName} | {e.typeId} | {(e.isStarter ? "Starter (free)" : $"Recipe ★{e.starRank}")} | {(e.isStarter ? "-" : e.starRank.ToString())} | {(e.isStarter ? "-" : e.cost.ToString())} | {e.nameZh} | {e.nameEn} |");
+                sb.AppendLine($"| {e.prefabName} | {e.typeId} | {(e.isStarter ? "Starter (free)" : $"Recipe ★{e.starRank}")} | {(e.isStarter ? "-" : e.starRank.ToString())} | {(e.isStarter ? "-" : e.cost.ToString())} | {e.nameZh} | {e.nameEn} |");
             }
             sb.AppendLine();
             sb.AppendLine($"Total candy types: **{catalog.Count}** ({catalog.Count(x => x.isStarter)} starters, {catalog.Count(x => !x.isStarter)} recipes).");
