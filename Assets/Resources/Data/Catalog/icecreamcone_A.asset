@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: icecreamcone_A
   displayNameZh: "\u51B0\u6DC7\u6DCB\u7CD6"
-  displayNameEn: Cone
-  prefab: {fileID: 7130680973832991342, guid: 76b3e0fa95511004c82853e09d7d42c9, type: 3}
+  displayNameEn: Ice Cream
+  prefab: {fileID: 8125080428303448598, guid: 76b3e0fa95511004c82853e09d7d42c9, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.78431374, g: 0.9607843, b: 0.83137256, a: 1}

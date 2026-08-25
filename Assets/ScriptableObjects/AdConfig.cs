@@ -17,5 +17,9 @@ namespace CandyShop
         public int maxRewardCoinsPerDay = 4;
         public int maxDoubleServePerRun = 3;
         public int maxRevivePerRun = 1;
+
+        [Header("Stamina ads (supplements 2.0)")]
+        [Tooltip("Separate per-date cap for reward_stamina (also counts toward the optional daily max).")]
+        public int maxStaminaAdsPerDate = 3;
     }
 }

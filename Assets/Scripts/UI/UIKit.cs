@@ -116,10 +116,17 @@ namespace CandyShop
             return img;
         }
 
-        // Map a catalog CandyTypeId to a family icon under Resources/UI/Candies.
+        // Map a catalog CandyTypeId to an icon under Resources/UI/Candies.
+        // Prefers the exact per-type icon rendered from its 3D mesh (art bible 4.3);
+        // falls back to the family icon when that type has no generated icon yet.
         public static string CandyIconPath(string typeId)
         {
             if (string.IsNullOrEmpty(typeId)) return "Candies/icon_candy_candy";
+            var exact = "Candies/icon_candy_" + typeId;
+            if (_spriteCache.ContainsKey(exact)) return exact;
+            if (Resources.Load<Sprite>("UI/" + exact) != null ||
+                Resources.Load<Texture2D>("UI/" + exact) != null)
+                return exact;
             var id = typeId.ToLowerInvariant();
             if (id.StartsWith("balloon")) return "Candies/icon_candy_balloon";
             if (id.StartsWith("cake") || id.StartsWith("swiss")) return "Candies/icon_candy_cake";
@@ -178,13 +185,30 @@ namespace CandyShop
 
         // ---- Widgets ----
 
-        public static RectTransform CreatePanel(Transform parent, string name, Color color, bool rounded = true)
+        // Art-bible sprite names under Resources/UI (9-slice imports).
+        public const string PanelSprite = "panel_cream";
+        public const string ButtonPrimary = "btn_primary";
+        public const string ButtonSecondary = "btn_secondary";
+
+        // When spriteName is given, the panel draws that 9-slice art sprite; pass
+        // Color.white to keep the art's own colors. Otherwise falls back to the
+        // rounded cookie (transparent containers / small dots).
+        public static RectTransform CreatePanel(Transform parent, string name, Color color,
+            bool rounded = true, string spriteName = null)
         {
             var go = new GameObject(name, typeof(Image));
             go.transform.SetParent(parent, false);
             var img = go.GetComponent<Image>();
-            if (rounded) img.sprite = RoundedSprite();
-            img.type = rounded ? Image.Type.Sliced : Image.Type.Simple;
+            if (!string.IsNullOrEmpty(spriteName))
+            {
+                img.sprite = LoadSprite(spriteName);
+                img.type = Image.Type.Sliced;
+            }
+            else
+            {
+                if (rounded) img.sprite = RoundedSprite();
+                img.type = rounded ? Image.Type.Sliced : Image.Type.Simple;
+            }
             img.color = color;
             img.raycastTarget = false;
             return (RectTransform)go.transform;
@@ -205,23 +229,38 @@ namespace CandyShop
             t.raycastTarget = false;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
+            // Cocoa outline keeps text readable on the busy cartoon art.
+            var outline = go.AddComponent<Outline>();
+            outline.effectColor = new Color(0.42f, 0.25f, 0.16f, 0.55f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
             return t;
         }
 
+        // Buttons draw the candy 9-slice art (btn_primary / btn_secondary). The bg color
+        // is ignored for art buttons (pass Color.white); state changes tint via image.color.
         public static Button CreateButton(Transform parent, string label, Vector2 size, Color bg,
-            int fontSize = 40, Color? textColor = null)
+            int fontSize = 40, Color? textColor = null, string spriteName = ButtonPrimary)
         {
             var go = new GameObject("Btn_" + label, typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
 
             var img = go.GetComponent<Image>();
-            img.sprite = RoundedSprite();
-            img.type = Image.Type.Sliced;
-            img.color = bg;
+            if (!string.IsNullOrEmpty(spriteName))
+            {
+                img.sprite = LoadSprite(spriteName);
+                img.type = Image.Type.Sliced;
+                img.color = Color.white;
+            }
+            else
+            {
+                img.sprite = RoundedSprite();
+                img.type = Image.Type.Sliced;
+                img.color = bg;
+            }
 
             var btn = go.GetComponent<Button>();
             var colors = btn.colors;
-            colors.pressedColor = Berry;
+            colors.pressedColor = new Color(0.85f, 0.85f, 0.85f);
             colors.fadeDuration = 0.08f;
             btn.colors = colors;
 
@@ -232,8 +271,8 @@ namespace CandyShop
             var tr = (RectTransform)txt.transform;
             tr.anchorMin = Vector2.zero;
             tr.anchorMax = Vector2.one;
-            tr.offsetMin = Vector2.zero;
-            tr.offsetMax = Vector2.zero;
+            tr.offsetMin = new Vector2(16, 8);
+            tr.offsetMax = new Vector2(-16, -8);
 
             return btn;
         }

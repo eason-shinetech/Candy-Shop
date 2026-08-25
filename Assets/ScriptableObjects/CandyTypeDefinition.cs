@@ -21,6 +21,9 @@ namespace CandyShop
         [Tooltip("Starters are always unlocked and have no shop recipe.")]
         public bool isStarter;
 
+        [Tooltip("Special edition (same mesh, different color); unlocked via collection milestones only.")]
+        public bool isSpecial;
+
         [Tooltip("Optional generated UI icon; may be null in MVP (colored dot fallback).")]
         public Sprite icon;
 

@@ -1,4 +1,4 @@
-{
+﻿{
   "entries": [
     {
       "key": "app_title",
@@ -37,8 +37,48 @@
       "value": "End Shift"
     },
     {
+      "key": "special_badge",
+      "value": "Special"
+    },
+    {
+      "key": "special_progress",
+      "value": "Specials {0}/{1}"
+    },
+    {
+      "key": "special_locked_hint",
+      "value": "Unlocks via collection milestones"
+    },
+    {
+      "key": "special_milestone_tag",
+      "value": "Milestone reward"
+    },
+    {
+      "key": "special_track_shelf",
+      "value": "Own {0} normal recipes"
+    },
+    {
+      "key": "special_track_band",
+      "value": "Own all {0}-star recipes"
+    },
+    {
+      "key": "special_track_full",
+      "value": "Own every normal recipe"
+    },
+    {
+      "key": "special_toast",
+      "value": "New special: {0}"
+    },
+    {
+      "key": "ad_stamina",
+      "value": "Watch ad for +{0} stamina"
+    },
+    {
+      "key": "coin_penalty_toast",
+      "value": "Coins -{0}"
+    },
+    {
       "key": "btn_quit_confirm",
-      "value": "Close the shop? This guest counts as a fail (−3 stamina). This shift's stars and progress will end."
+      "value": "Close the shop? This guest counts as a fail (-3 stamina, part of your coins is lost). This shift's stars and progress will end."
     },
     {
       "key": "btn_confirm",
@@ -135,6 +175,10 @@
     {
       "key": "signin_streak_reward",
       "value": "Streak reward: unlocked recipe {0}"
+    },
+    {
+      "key": "signin_streak_stamina",
+      "value": "Streak reward: +{0} stamina"
     },
     {
       "key": "signin_all_recipes",
@@ -331,6 +375,10 @@
     {
       "key": "hud_stamina_plus",
       "value": "Stamina +1"
+    },
+    {
+      "key": "hud_stamina_bonus",
+      "value": "Stamina +{0}"
     },
     {
       "key": "hud_stamina_fail",

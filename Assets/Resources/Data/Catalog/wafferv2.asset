@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   typeId: wafferv2
   displayNameZh: "\u5A01\u5316\u7CD6"
-  displayNameEn: Candy
-  prefab: {fileID: 3082730989435548138, guid: 903000bf0ec88374bbe6c1f8442652ea, type: 3}
+  displayNameEn: Wafer
+  prefab: {fileID: 793937176643294011, guid: 903000bf0ec88374bbe6c1f8442652ea, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 1, g: 0.56078434, b: 0.72156864, a: 1}

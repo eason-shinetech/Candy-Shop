@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: waffer_block
   candyType: {fileID: 11400000, guid: 8b8ab89942836f442acb6b831282dc50, type: 2}
-  cost: 4200
+  cost: 10000
+  starRank: 5
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

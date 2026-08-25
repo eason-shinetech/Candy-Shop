@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: cupcake_A
   displayNameZh: "\u676F\u5B50\u86CB\u7CD5\u7CD6"
   displayNameEn: Cupcake
-  prefab: {fileID: 4361865250181420902, guid: 71e845702c0fa024c9ce224729384517, type: 3}
+  prefab: {fileID: 7225139568036256180, guid: 71e845702c0fa024c9ce224729384517, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.78431374, g: 0.9607843, b: 0.83137256, a: 1}

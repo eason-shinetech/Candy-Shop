@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: cake_big
   candyType: {fileID: 11400000, guid: 1a1a2b3033dfb4546b731bef21fc3e0f, type: 2}
-  cost: 240
+  cost: 1000
+  starRank: 1
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

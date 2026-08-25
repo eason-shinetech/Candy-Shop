@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: jelly_B
   candyType: {fileID: 11400000, guid: 05be67d566969294489c449fb0e80807, type: 2}
-  cost: 2400
+  cost: 5000
+  starRank: 3
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

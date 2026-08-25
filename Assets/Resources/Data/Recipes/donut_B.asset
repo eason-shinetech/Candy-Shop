@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: donut_B
   candyType: {fileID: 11400000, guid: ff07453c339dc6c49a9168a2aec45269, type: 2}
-  cost: 1440
+  cost: 3000
+  starRank: 2
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

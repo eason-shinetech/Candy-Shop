@@ -35,6 +35,7 @@ namespace CandyShop
                 // New local date: discard leftovers and refill to the daily max (spec 8.2).
                 save.stamina = cfg.dailyMax;
                 save.staminaDate = today;
+                save.perfectStaminaRefundsToday = 0;
                 SaveDataService.Save();
                 NotifyChanged();
             }
@@ -66,14 +67,23 @@ namespace CandyShop
             return true;
         }
 
-        // Perfect serve: refund (then clamp).
+        // Perfect serve: refund stamina when under the daily cap (then clamp).
+        // Star restore is handled by GameManager separately and is not capped here.
         public static void SettlePerfect()
         {
             var cfg = Config;
-            int refund = cfg != null ? cfg.perfectRefund : 1;
+            var save = SaveDataService.Current;
+            if (cfg == null || save == null) return;
+
+            int refund = cfg.perfectRefund;
             if (refund <= 0) return;
-            SaveDataService.Current.stamina += refund;
-            ClampAndSave(SaveDataService.Current, cfg);
+
+            int cap = Mathf.Max(0, cfg.maxPerfectRefundsPerDay);
+            if (save.perfectStaminaRefundsToday >= cap) return;
+
+            save.stamina += refund;
+            save.perfectStaminaRefundsToday++;
+            ClampAndSave(save, cfg);
             ShowFloat(I18nService.Get("hud_stamina_plus"));
         }
 
@@ -87,16 +97,57 @@ namespace CandyShop
         public static void ApplyFailPenalty()
         {
             var cfg = Config;
-            int penalty = cfg != null ? cfg.failPenalty : 3;
-            SaveDataService.Current.stamina -= penalty;
+            SaveDataService.Current.stamina -= cfg != null ? cfg.failPenalty : 3;
             ClampAndSave(SaveDataService.Current, cfg);
             ShowFloat(I18nService.IsReady ? I18nService.Get("hud_stamina_fail") : "体力-3");
+        }
+
+        // Bonus grant (e.g. streak-7). May soft-overflow above dailyMax up to bonusOverflowMax.
+        // Returns the actual amount applied after clamp.
+        public static int GrantBonus(int amount)
+        {
+            if (amount <= 0) return 0;
+            var cfg = Config;
+            var save = SaveDataService.Current;
+            if (save == null) return 0;
+
+            int before = save.stamina;
+            save.stamina += amount;
+            ClampAndSave(save, cfg);
+            int applied = save.stamina - before;
+            if (applied > 0)
+            {
+                string floatText = I18nService.IsReady
+                    ? I18nService.Get("hud_stamina_bonus", applied)
+                    : $"体力+{applied}";
+                ShowFloat(floatText);
+            }
+            return applied;
+        }
+
+        // Watch-ad / sign-in stamina (supplements 2.0): hard clamp to dailyMax, no overflow.
+        // Returns the actual amount applied after clamp.
+        public static int GrantHardClamped(int amount)
+        {
+            if (amount <= 0) return 0;
+            var cfg = Config;
+            var save = SaveDataService.Current;
+            if (save == null) return 0;
+
+            int before = save.stamina;
+            save.stamina += amount;
+            int max = cfg != null ? cfg.dailyMax : 20;
+            save.stamina = Mathf.Clamp(save.stamina, 0, max);
+            SaveDataService.Save();
+            NotifyChanged();
+            return save.stamina - before;
         }
 
         private static void ClampAndSave(SaveDataModel save, StaminaConfig cfg)
         {
             int max = cfg != null ? cfg.dailyMax : 20;
-            save.stamina = Mathf.Clamp(save.stamina, 0, max);
+            int overflow = cfg != null ? Mathf.Max(0, cfg.bonusOverflowMax) : 0;
+            save.stamina = Mathf.Clamp(save.stamina, 0, max + overflow);
             SaveDataService.Save();
             NotifyChanged();
         }

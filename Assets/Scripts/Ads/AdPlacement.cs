@@ -10,6 +10,7 @@ namespace CandyShop
         reward_powerup_buy_freeze,
         reward_daily_extra,
         reward_revive,
+        reward_stamina,
         interstitial_after_run
     }
 }

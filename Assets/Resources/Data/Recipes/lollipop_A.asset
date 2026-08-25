@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: lollipop_A
   candyType: {fileID: 11400000, guid: a5536087311640145bfc54dea3bdf560, type: 2}
-  cost: 2460
+  cost: 5000
+  starRank: 3
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3017993757041723902
+--- !u!1 &6345689710104328542
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8570989384279924588}
-  - component: {fileID: 3384389687687456292}
-  - component: {fileID: 4082172166896676082}
+  - component: {fileID: 5148698489368222247}
+  - component: {fileID: 1833079892769535562}
+  - component: {fileID: 1483340392206463405}
   m_Layer: 0
   m_Name: Candy_candyblock
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8570989384279924588
+--- !u!4 &5148698489368222247
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3017993757041723902}
+  m_GameObject: {fileID: 6345689710104328542}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071069, y: 0, z: 0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -33,21 +33,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &3384389687687456292
+--- !u!33 &1833079892769535562
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3017993757041723902}
+  m_GameObject: {fileID: 6345689710104328542}
   m_Mesh: {fileID: -5704073561679072852, guid: db1a60bb996c9d14fab9d9796c920d26, type: 3}
---- !u!23 &4082172166896676082
+--- !u!23 &1483340392206463405
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3017993757041723902}
+  m_GameObject: {fileID: 6345689710104328542}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

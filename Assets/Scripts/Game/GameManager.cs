@@ -91,10 +91,30 @@ namespace CandyShop
             if (_orders != null) _orders.BeginQueue();
         }
 
-        // Confirmed fail (Game Over left without revive, or quit confirm): stamina -3.
+        // Confirmed fail (Game Over left without revive, or quit confirm):
+        // stamina -3 and the fail coin penalty (supplements 2.0). Not on revive, not on Shift Over.
+        // runEarned = gross serve payouts this run (speed rewards + perfect bonus; ad doubles excluded).
+        public int LastFailCoinPenalty { get; private set; }
+
         public void ConfirmFailPenalty()
         {
             StaminaService.ApplyFailPenalty();
+            LastFailCoinPenalty = ApplyFailCoinPenalty();
+        }
+
+        private int ApplyFailCoinPenalty()
+        {
+            var econ = economyConfig;
+            if (econ == null || econ.failCoinPenaltyRatio <= 0f) return 0;
+
+            int runEarned = CoinsEarnedThisRun;
+            int penalty = Mathf.Max(econ.failCoinPenaltyMin,
+                Mathf.RoundToInt(runEarned * econ.failCoinPenaltyRatio));
+            penalty = Mathf.Min(penalty, EconomyManager.Coins); // never below 0
+            if (penalty <= 0) return 0;
+
+            EconomyManager.TrySpend(penalty);
+            return penalty;
         }
 
         public void NotifyCorrectPick(string typeId)

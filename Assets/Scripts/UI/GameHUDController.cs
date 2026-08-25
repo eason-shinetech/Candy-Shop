@@ -64,6 +64,7 @@ namespace CandyShop
         private int _comboCount;
         private bool _challengeWasClaimed;
         private int _tutorialStep;
+        private RectTransform _bottomBar;
         private bool _runStarted;
         private int _bestAtRunStart;
         private string _lastFailReason;
@@ -73,6 +74,7 @@ namespace CandyShop
         private PowerUpDefinition _buySheetDef;
 
         public static string PendingRecipeUnlockToast; // set by RecipeShopController
+        public static int PendingCoinPenaltyToast; // fail coin loss shown on the next menu load
 
         private void Awake()
         {
@@ -181,7 +183,7 @@ namespace CandyShop
                 new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-280, -42), new Vector2(-130, 42));
 
             // Stamina n/20 next to coins (spec 8.2 HUD)
-            var staminaChip = UIKit.CreatePanel(top, "StaminaChip", UIKit.Cream);
+            var staminaChip = UIKit.CreatePanel(top, "StaminaChip", Color.white, spriteName: UIKit.PanelSprite);
             UIKit.Place((RectTransform)staminaChip.transform,
                 new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-280, 52), new Vector2(-20, 136));
             var stamIcon = UIKit.CreateIcon(staminaChip, "icon_stamina", Vector2.one * 56f);
@@ -208,7 +210,7 @@ namespace CandyShop
             var timerBg = UIKit.CreatePanel(top, "TimerBg", Color.white);
             timerBg.GetComponent<Image>().sprite = UIKit.LoadSprite("bar_timer_bg");
             timerBg.GetComponent<Image>().type = Image.Type.Sliced;
-            UIKit.Place(timerBg, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, -120), new Vector2(0, -76));
+            UIKit.Place(timerBg, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, -132), new Vector2(0, -64));
             var fillGo = new GameObject("TimerFill", typeof(Image));
             fillGo.transform.SetParent(timerBg, false);
             _timerFill = (RectTransform)fillGo.transform;
@@ -230,7 +232,7 @@ namespace CandyShop
             UIKit.Place(_orderChipsRow, new Vector2(0, 0), new Vector2(1, 0), new Vector2(40, -540), new Vector2(-40, -380));
 
             // ---- Daily challenge chip ----
-            var challengeChip = UIKit.CreatePanel(top, "ChallengeChip", UIKit.Lemon);
+            var challengeChip = UIKit.CreatePanel(top, "ChallengeChip", Color.white, spriteName: UIKit.PanelSprite);
             UIKit.Place(challengeChip, new Vector2(0.5f, 0), new Vector2(0.5f, 0),
                 new Vector2(-280, -620), new Vector2(280, -556));
             _challengeChipText = UIKit.CreateText(challengeChip, "", 34, UIKit.Cocoa);
@@ -257,6 +259,7 @@ namespace CandyShop
             // ---- Bottom thumb zone ----
             var bottom = UIKit.CreatePanel(_safeRoot, "Bottom", new Color(0, 0, 0, 0));
             UIKit.Place(bottom, new Vector2(0, 0), new Vector2(1, 0), new Vector2(24, 50), new Vector2(-24, 290));
+            _bottomBar = bottom;
 
             AddPowerButton(bottom, _game.magnetDef, 0);
             AddPowerButton(bottom, _game.tornadoDef, 1);
@@ -266,7 +269,7 @@ namespace CandyShop
             BuildGameOverPopup(canvas.transform);
             BuildServePopup(_safeRoot);
             BuildBuySheet(canvas.transform);
-            BuildTutorial(canvas.transform);
+            BuildTutorial();
             BuildShiftOverPopup(canvas.transform);
 
             RefreshLocalizedTexts();
@@ -346,7 +349,7 @@ namespace CandyShop
             const float w = 300f, h = 200f, gap = 40f;
             float x = -(w * 3 + gap * 2) / 2f + index * (w + gap) + w / 2f;
 
-            var btn = UIKit.CreateButton(bottom, def.LocalizedName, new Vector2(w, h), Color.white, 36, UIKit.Cocoa);
+            var btn = UIKit.CreateButton(bottom, def.LocalizedName, new Vector2(w, h), Color.white, 36);
             var rt = (RectTransform)btn.transform;
             rt.anchorMin = new Vector2(0, 0.5f);
             rt.anchorMax = new Vector2(0, 0.5f);
@@ -436,7 +439,7 @@ namespace CandyShop
             dimImg.raycastTarget = true;
             _pausePopup = dim.gameObject;
 
-            var panel = UIKit.CreatePanel(dim, "PausePanel", UIKit.Cream);
+            var panel = UIKit.CreatePanel(dim, "PausePanel", Color.white, spriteName: UIKit.PanelSprite);
             panel.sizeDelta = new Vector2(800, 980);
             panel.anchoredPosition = Vector2.zero;
 
@@ -447,7 +450,8 @@ namespace CandyShop
             _pauseContinueBtn.transform.localPosition = new Vector3(0, 240, 0);
             _pauseContinueBtn.onClick.AddListener(() => { HideAllPopups(); _game.SetPaused(false); });
 
-            _pauseQuitBtn = UIKit.CreateButton(panel, "", new Vector2(600, 140), UIKit.Grape);
+            _pauseQuitBtn = UIKit.CreateButton(panel, "", new Vector2(600, 140), Color.white, 40,
+                spriteName: UIKit.ButtonSecondary);
             _pauseQuitBtn.transform.localPosition = new Vector3(0, 70, 0);
             _pauseQuitBtn.onClick.AddListener(ShowQuitConfirm);
 
@@ -482,18 +486,19 @@ namespace CandyShop
             var confirmDim = UIKit.CreatePanel(parent, "QuitConfirmDim", new Color(0, 0, 0, 0.55f));
             UIKit.Stretch(confirmDim, parent);
             confirmDim.GetComponent<Image>().raycastTarget = true;
-            var cPanel = UIKit.CreatePanel(confirmDim, "Confirm", UIKit.Cream);
+            var cPanel = UIKit.CreatePanel(confirmDim, "Confirm", Color.white, spriteName: UIKit.PanelSprite);
             cPanel.sizeDelta = new Vector2(820, 520);
             cPanel.anchoredPosition = Vector2.zero;
 
             _quitConfirmBody = UIKit.CreateText(cPanel, "", 44, UIKit.Cocoa);
             _quitConfirmBody.rectTransform.anchoredPosition = new Vector2(0, 100);
 
-            _quitYesBtn = UIKit.CreateButton(cPanel, "", new Vector2(300, 130), UIKit.MagnetRed);
+            _quitYesBtn = UIKit.CreateButton(cPanel, "", new Vector2(300, 130), new Color(1f, 0.75f, 0.78f));
             _quitYesBtn.transform.localPosition = new Vector3(-180, -140, 0);
             _quitYesBtn.onClick.AddListener(() => { HideAllPopups(); ConfirmQuitRun(); });
 
-            _quitNoBtn = UIKit.CreateButton(cPanel, "", new Vector2(300, 130), UIKit.SkyMint, 40, UIKit.Cocoa);
+            _quitNoBtn = UIKit.CreateButton(cPanel, "", new Vector2(300, 130), Color.white, 40,
+                spriteName: UIKit.ButtonSecondary);
             _quitNoBtn.transform.localPosition = new Vector3(180, -140, 0);
             _quitNoBtn.onClick.AddListener(() => confirmDim.gameObject.SetActive(false));
 
@@ -520,7 +525,7 @@ namespace CandyShop
 
             _pauseLangButton = UIKit.CreateButton(row.transform,
                 I18nService.Language == "en" ? I18nService.Get("lang_zh") : I18nService.Get("lang_en"),
-                new Vector2(150, 78), UIKit.Grape, 32);
+                new Vector2(150, 78), Color.white, 32, spriteName: UIKit.ButtonSecondary);
             _pauseLangButton.name = "LangSwitch";
             var brt = (RectTransform)_pauseLangButton.transform;
             brt.anchorMin = new Vector2(1, 0.5f);
@@ -541,8 +546,9 @@ namespace CandyShop
             if (!_failPenaltyApplied)
             {
                 _failPenaltyApplied = true;
-                // ApplyFailPenalty itself fires FloatingTextRequested -> HUD shows 体力-3 once.
+                // Stamina -3 (float) + fail coin penalty (supplements 2.0), both once.
                 _game.ConfirmFailPenalty();
+                PendingCoinPenaltyToast = _game.LastFailCoinPenalty;
             }
             _game.QuitRun();
         }
@@ -568,7 +574,8 @@ namespace CandyShop
 
             var btn = UIKit.CreateButton(row.transform,
                 value ? I18nService.Get("toggle_on") : I18nService.Get("toggle_off"), new Vector2(150, 78),
-                value ? UIKit.SkyMint : new Color(0.72f, 0.72f, 0.72f), 36, UIKit.Cocoa);
+                Color.white, 36);
+            btn.image.color = value ? Color.white : new Color(0.72f, 0.72f, 0.72f);
             var brt = (RectTransform)btn.transform;
             brt.anchorMin = new Vector2(1, 0.5f);
             brt.anchorMax = new Vector2(1, 0.5f);
@@ -580,7 +587,7 @@ namespace CandyShop
                 bool isOn = txt.text == I18nService.Get("toggle_on");
                 isOn = !isOn;
                 txt.text = isOn ? I18nService.Get("toggle_on") : I18nService.Get("toggle_off");
-                btn.image.color = isOn ? UIKit.SkyMint : new Color(0.72f, 0.72f, 0.72f);
+                btn.image.color = isOn ? Color.white : new Color(0.72f, 0.72f, 0.72f);
                 onChanged(isOn);
             });
         }
@@ -592,7 +599,7 @@ namespace CandyShop
             dim.GetComponent<Image>().raycastTarget = true;
             _gameOverPopup = dim.gameObject;
 
-            var panel = UIKit.CreatePanel(dim, "GameOverPanel", UIKit.Cream);
+            var panel = UIKit.CreatePanel(dim, "GameOverPanel", Color.white, spriteName: UIKit.PanelSprite);
             panel.sizeDelta = new Vector2(860, 1050);
             panel.anchoredPosition = Vector2.zero;
 
@@ -604,7 +611,8 @@ namespace CandyShop
             srt.sizeDelta = new Vector2(800, 420);
             srt.anchoredPosition = new Vector2(0, 100);
 
-            _reviveButton = UIKit.CreateButton(panel, "", new Vector2(700, 140), UIKit.Grape, 42);
+            _reviveButton = UIKit.CreateButton(panel, "", new Vector2(700, 140), Color.white, 42,
+                spriteName: UIKit.ButtonSecondary);
             _reviveButton.transform.localPosition = new Vector3(0, -250, 0);
             _reviveButton.onClick.AddListener(DoRevive);
 
@@ -621,8 +629,9 @@ namespace CandyShop
             if (reasonIsFail(_lastFailReason) && !_failPenaltyApplied)
             {
                 _failPenaltyApplied = true;
-                // ApplyFailPenalty itself fires FloatingTextRequested -> HUD shows 体力-3 once.
+                // Stamina -3 (float) + fail coin penalty (supplements 2.0), both once.
                 _game.ConfirmFailPenalty();
+                PendingCoinPenaltyToast = _game.LastFailCoinPenalty; // shown on the next menu load
             }
             _game.ReturnToMenu();
         }
@@ -634,7 +643,7 @@ namespace CandyShop
 
         private void BuildServePopup(RectTransform parent)
         {
-            var chip = UIKit.CreatePanel(parent, "ServeChip", UIKit.SkyMint);
+            var chip = UIKit.CreatePanel(parent, "ServeChip", Color.white, spriteName: UIKit.PanelSprite);
             chip.sizeDelta = new Vector2(940, 230);
             chip.anchorMin = new Vector2(0.5f, 0.5f);
             chip.anchorMax = new Vector2(0.5f, 0.5f);
@@ -643,7 +652,8 @@ namespace CandyShop
             _serveRewardText = UIKit.CreateText(chip, "+10", 72, UIKit.Cocoa);
             ((RectTransform)_serveRewardText.transform).anchoredPosition = new Vector2(-200, 0);
 
-            _doubleButton = UIKit.CreateButton(chip, "", new Vector2(360, 110), UIKit.Lemon, 36, UIKit.Cocoa);
+            _doubleButton = UIKit.CreateButton(chip, "", new Vector2(360, 110), Color.white, 36,
+                spriteName: UIKit.ButtonSecondary);
             var drt = (RectTransform)_doubleButton.transform;
             drt.anchorMin = new Vector2(1, 0.5f);
             drt.anchorMax = new Vector2(1, 0.5f);
@@ -662,7 +672,7 @@ namespace CandyShop
             dim.GetComponent<Image>().color = new Color(0, 0, 0, 0.45f);
             _buySheet = dim.gameObject;
 
-            var panel = UIKit.CreatePanel(dim, "BuySheet", UIKit.Cream);
+            var panel = UIKit.CreatePanel(dim, "BuySheet", Color.white, spriteName: UIKit.PanelSprite);
             panel.sizeDelta = new Vector2(860, 780);
             panel.anchoredPosition = Vector2.zero;
 
@@ -701,8 +711,8 @@ namespace CandyShop
                 });
             });
 
-            _buyCancelBtn = UIKit.CreateButton(panel, "", new Vector2(680, 120),
-                new Color(0.75f, 0.72f, 0.68f), 38, UIKit.Cocoa);
+            _buyCancelBtn = UIKit.CreateButton(panel, "", new Vector2(680, 120), Color.white, 38,
+                spriteName: UIKit.ButtonSecondary);
             _buyCancelBtn.transform.localPosition = new Vector3(0, -230, 0);
             _buyCancelBtn.onClick.AddListener(CloseBuySheet);
 
@@ -710,7 +720,7 @@ namespace CandyShop
             _buyPrice = price;
 
             // Insufficient-coins inner sheet
-            var insufPanel = UIKit.CreatePanel(dim, "Insufficient", UIKit.Lemon);
+            var insufPanel = UIKit.CreatePanel(dim, "Insufficient", Color.white, spriteName: UIKit.PanelSprite);
             insufPanel.sizeDelta = new Vector2(820, 500);
             insufPanel.anchoredPosition = Vector2.zero;
             insufPanel.SetAsLastSibling();
@@ -734,7 +744,7 @@ namespace CandyShop
             });
 
             var closeInsuf = UIKit.CreateButton(insufPanel, I18nService.Get("btn_cancel"), new Vector2(660, 110),
-                new Color(0.75f, 0.72f, 0.68f), 36, UIKit.Cocoa);
+                Color.white, 36, spriteName: UIKit.ButtonSecondary);
             closeInsuf.transform.localPosition = new Vector3(0, -160, 0);
             closeInsuf.onClick.AddListener(() => insufPanel.gameObject.SetActive(false));
 
@@ -759,6 +769,8 @@ namespace CandyShop
             _insufficientSheet.SetActive(true);
         }
 
+        private bool _pausedForBuySheet;
+
         private void OpenBuySheet(PowerUpDefinition def)
         {
             _buySheetDef = def;
@@ -766,7 +778,14 @@ namespace CandyShop
             _buyPrice.text = string.Format(I18nService.Get("powerup_price"), def.buyCost);
             _buySheetMessage.text = "";
             bool afford = EconomyManager.Coins >= def.buyCost;
-            _buyButton.image.color = afford ? UIKit.SugarPink : new Color(0.82f, 0.62f, 0.66f);
+            _buyButton.image.color = afford ? Color.white : new Color(0.82f, 0.62f, 0.66f);
+
+            // Spec 14: while an ad/sheet is up, the customer timer pauses (same as Pause).
+            if (_game.RunActive && !_game.Paused)
+            {
+                _game.SetPaused(true);
+                _pausedForBuySheet = true;
+            }
             _buySheet.SetActive(true);
         }
 
@@ -774,17 +793,31 @@ namespace CandyShop
         {
             _buySheet.SetActive(false);
             if (_insufficientSheet != null) _insufficientSheet.SetActive(false);
+            if (_pausedForBuySheet)
+            {
+                _pausedForBuySheet = false;
+                _game.SetPaused(false);
+            }
             RefreshBadges();
         }
 
-        private void BuildTutorial(Transform parent)
+        private void BuildTutorial()
         {
-            var dim = UIKit.CreatePanel(parent, "TutorialDim", new Color(0, 0, 0, 0.6f));
-            UIKit.Stretch(dim, parent);
-            dim.GetComponent<Image>().raycastTarget = true;
+            // Dedicated high-order canvas: the card stays clickable above the
+            // Tutorial Spotlight overlay (when the package is imported), while the
+            // spotlight dims everything except the highlighted target.
+            var tutorialCanvas = UIKit.CreateCanvas(null, "TutorialCanvas");
+            tutorialCanvas.sortingOrder = 500;
+            var safeRoot = new GameObject("SafeRoot", typeof(RectTransform)).GetComponent<RectTransform>();
+            safeRoot.SetParent(tutorialCanvas.transform, false);
+            safeRoot.gameObject.AddComponent<SafeAreaFitter>();
+
+            var dim = UIKit.CreatePanel(safeRoot, "TutorialDim", new Color(0, 0, 0, 0.6f));
+            UIKit.Stretch(dim, safeRoot);
+            dim.GetComponent<Image>().raycastTarget = !TutorialSpotlightAdapter.Available;
             _tutorialPopup = dim.gameObject;
 
-            var card = UIKit.CreatePanel(dim, "TutorialCard", UIKit.Cream);
+            var card = UIKit.CreatePanel(dim, "TutorialCard", Color.white, spriteName: UIKit.PanelSprite);
             card.sizeDelta = new Vector2(880, 900);
             card.anchoredPosition = Vector2.zero;
 
@@ -802,7 +835,7 @@ namespace CandyShop
             });
 
             _tutorialSkip = UIKit.CreateButton(card, I18nService.Get("tutorial_skip"), new Vector2(300, 100),
-                new Color(0.78f, 0.75f, 0.7f), 34, UIKit.Cocoa);
+                Color.white, 34, spriteName: UIKit.ButtonSecondary);
             _tutorialSkip.transform.localPosition = new Vector3(0, -370, 0);
             _tutorialSkip.onClick.AddListener(FinishTutorial);
 
@@ -820,18 +853,22 @@ namespace CandyShop
                 case 1:
                     _tutorialBody.text = I18nService.Get("tutorial_1");
                     SetButtonText(_tutorialNext, I18nService.Get("tutorial_next"));
+                    TutorialSpotlightAdapter.Show(_orderChipsRow); // point at order chips + pile
                     break;
                 case 2:
                     _tutorialBody.text = I18nService.Get("tutorial_2");
+                    TutorialSpotlightAdapter.Show(_starsText.rectTransform); // stars restore rule
                     break;
                 default:
                     _tutorialBody.text = I18nService.Get("tutorial_3");
+                    TutorialSpotlightAdapter.Show(_bottomBar); // power-up thumb zone
                     break;
             }
         }
 
         private void FinishTutorial()
         {
+            TutorialSpotlightAdapter.Hide();
             SaveDataService.Current.tutorialDone = true;
             SaveDataService.Save();
             _tutorialPopup.SetActive(false);
@@ -872,7 +909,7 @@ namespace CandyShop
             for (int i = 0; i < n; i++)
             {
                 var type = order.types[i];
-                var chip = UIKit.CreatePanel(_orderChipsRow, "Chip_" + type.typeId, UIKit.Cream);
+                var chip = UIKit.CreatePanel(_orderChipsRow, "Chip_" + type.typeId, Color.white, spriteName: UIKit.PanelSprite);
                 chip.sizeDelta = new Vector2(chipW, 140);
                 chip.anchorMin = new Vector2(0.5f, 0.5f);
                 chip.anchorMax = new Vector2(0.5f, 0.5f);
@@ -903,7 +940,7 @@ namespace CandyShop
             foreach (Transform child in _queueStrip)
                 Destroy(child.gameObject);
 
-            var current = UIKit.CreatePanel(_queueStrip, "Customer_Current", UIKit.Cream);
+            var current = UIKit.CreatePanel(_queueStrip, "Customer_Current", Color.white, spriteName: UIKit.PanelSprite);
             current.sizeDelta = new Vector2(300, 180);
             current.anchorMin = new Vector2(0, 0.5f);
             current.anchorMax = new Vector2(0, 0.5f);
@@ -915,7 +952,7 @@ namespace CandyShop
             for (int i = 0; i < _game.orderConfig.waitingCount; i++)
             {
                 var waitingState = _orders.GetWaiting(i);
-                var card = UIKit.CreatePanel(_queueStrip, "Customer_Wait" + i, UIKit.Cream);
+                var card = UIKit.CreatePanel(_queueStrip, "Customer_Wait" + i, Color.white, spriteName: UIKit.PanelSprite);
                 card.sizeDelta = new Vector2(230, 140);
                 card.anchorMin = new Vector2(0, 0.5f);
                 card.anchorMax = new Vector2(0, 0.5f);
@@ -1077,6 +1114,7 @@ namespace CandyShop
         private void OnCorrectPick(CandyTypeDefinition type)
         {
             Haptics.Light();
+            Sfx.Pop();
             PunchChip(type);
             UpdateChipCounts();
             RefreshChallengeChip();
@@ -1090,6 +1128,7 @@ namespace CandyShop
         {
             _comboCount = 0;
             Haptics.Medium();
+            Sfx.Thud();
             StartCoroutine(ShakeCamera());
         }
 
@@ -1202,13 +1241,13 @@ namespace CandyShop
         private IEnumerator ShowToastRoutine(string message, float delay)
         {
             if (delay > 0f) yield return new WaitForSeconds(delay);
-            var toast = UIKit.CreatePanel(null, "Toast", UIKit.Grape);
+            var toast = UIKit.CreatePanel(null, "Toast", Color.white, spriteName: UIKit.PanelSprite);
             toast.SetParent(_safeRoot, false);
             toast.anchorMin = new Vector2(0.5f, 0.35f);
             toast.anchorMax = new Vector2(0.5f, 0.35f);
             toast.sizeDelta = new Vector2(900, 130);
             toast.anchoredPosition = Vector2.zero;
-            var txt = UIKit.CreateText(toast, message, 38, Color.white);
+            var txt = UIKit.CreateText(toast, message, 38, UIKit.Cocoa);
             UIKit.Stretch((RectTransform)txt.transform, toast);
             yield return new WaitForSeconds(2.2f);
             Destroy(toast.gameObject);
@@ -1244,7 +1283,7 @@ namespace CandyShop
             {
                 if (ok)
                 {
-                    // Double the speed reward only (never the perfect +5).
+                    // Double the speed reward only (never the perfect bonus).
                     int lastReward = ParseReward(_serveRewardText.text);
                     EconomyManager.AddCoins(lastReward);
                     _game.RegisterDoubleReward();
@@ -1270,6 +1309,7 @@ namespace CandyShop
             if (_autoContinueCo != null) StopCoroutine(_autoContinueCo);
             _autoContinueCo = null;
             _servePopup.SetActive(false);
+            _comboCount = 0; // combo breaks on serve (supplements 1.3)
             _orders.AdvanceQueue();
         }
 
@@ -1314,6 +1354,7 @@ namespace CandyShop
                 _lastFailReason = "shift_over";
                 RefreshStaminaLabel();
                 FillShiftOverStats();
+                RefreshShiftOverAdButton();
                 _shiftOverPopup.SetActive(true);
                 return;
             }
@@ -1381,7 +1422,7 @@ namespace CandyShop
             dim.GetComponent<Image>().raycastTarget = true;
             _shiftOverPopup = dim.gameObject;
 
-            var panel = UIKit.CreatePanel(dim, "ShiftOverPanel", UIKit.Cream);
+            var panel = UIKit.CreatePanel(dim, "ShiftOverPanel", Color.white, spriteName: UIKit.PanelSprite);
             panel.sizeDelta = new Vector2(860, 760);
             panel.anchoredPosition = Vector2.zero;
 
@@ -1403,8 +1444,29 @@ namespace CandyShop
             srt.anchoredPosition = new Vector2(0, -80);
 
             _shiftOverMenuBtn = UIKit.CreateButton(panel, "", new Vector2(700, 140), UIKit.SugarPink);
-            _shiftOverMenuBtn.transform.localPosition = new Vector3(0, -240, 0);
+            _shiftOverMenuBtn.transform.localPosition = new Vector3(0, -300, 0);
             _shiftOverMenuBtn.onClick.AddListener(() => _game.ReturnToMenu());
+
+            // Opt-in watch-ad stamina (supplements 2.0): restore, then the player can
+            // return to the menu and start again — never auto-enter the Game scene.
+            var stamAdBtn = UIKit.CreateButton(panel, "", new Vector2(700, 120), Color.white, 34,
+                spriteName: UIKit.ButtonSecondary);
+            stamAdBtn.name = "ShiftOverStaminaAd";
+            stamAdBtn.transform.localPosition = new Vector3(0, -160, 0);
+            stamAdBtn.onClick.AddListener(() =>
+            {
+                var ads = AdServiceLocator.Service;
+                if (ads == null || !ads.IsReady(AdPlacement.reward_stamina)) return;
+                ads.ShowRewarded(AdPlacement.reward_stamina, ok =>
+                {
+                    if (!ok) return;
+                    var cfg = _game.staminaConfig;
+                    StaminaService.GrantHardClamped(cfg != null ? cfg.staminaAdGrant : 5);
+                    RefreshStaminaLabel();
+                    RefreshShiftOverAdButton();
+                });
+            });
+            _shiftOverAdBtn = stamAdBtn;
 
             _shiftOverTitle.text = I18nService.Get("stamina_shift_title");
             _shiftOverBody.text = I18nService.Get("stamina_shift_body");
@@ -1413,13 +1475,31 @@ namespace CandyShop
             _shiftOverPopup.SetActive(false);
         }
 
+        private Button _shiftOverAdBtn;
+
+        // Ad button only when an ad is ready (never promise stamina, supplements 2.0).
+        private void RefreshShiftOverAdButton()
+        {
+            if (_shiftOverAdBtn == null) return;
+            var ads = AdServiceLocator.Service;
+            bool ready = ads != null && ads.IsReady(AdPlacement.reward_stamina);
+            _shiftOverAdBtn.gameObject.SetActive(ready);
+            if (!ready) return;
+            var txt = _shiftOverAdBtn.GetComponentInChildren<Text>();
+            if (txt != null)
+            {
+                var cfg = _game.staminaConfig;
+                txt.text = I18nService.Get("ad_stamina", cfg != null ? cfg.staminaAdGrant : 5);
+            }
+        }
+
         private void HideAllPopups()
         {
             if (_pausePopup != null) _pausePopup.SetActive(false);
             if (_quitConfirm != null) _quitConfirm.SetActive(false);
             if (_gameOverPopup != null) _gameOverPopup.SetActive(false);
-            if (_buySheet != null) _buySheet.SetActive(false);
-            if (_insufficientSheet != null) _insufficientSheet.SetActive(false);
+            if (_buySheet != null && _buySheet.activeSelf) CloseBuySheet();
+            else if (_insufficientSheet != null) _insufficientSheet.SetActive(false);
             if (_shiftOverPopup != null) _shiftOverPopup.SetActive(false);
         }
     }

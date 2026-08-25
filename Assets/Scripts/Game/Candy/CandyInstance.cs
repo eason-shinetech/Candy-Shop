@@ -8,20 +8,26 @@ namespace CandyShop
     {
         public string candyTypeId;
         public CandyTypeDefinition definition;
+        [Tooltip("Prefab this instance was created from (pool key).")]
+        public GameObject prefabSource;
         public bool Picked { get; private set; }
 
         private Collider _collider;
+        private CandyPileRestock _pile;
 
-        private void Awake()
+        private Collider Collider =>
+            _collider != null ? _collider : (_collider = GetComponent<Collider>());
+
+        private void Start()
         {
-            _collider = GetComponent<Collider>();
+            if (_pile == null) _pile = FindObjectOfType<CandyPileRestock>();
         }
 
         public void MarkRemoved()
         {
             if (Picked) return;
             Picked = true;
-            if (_collider != null) _collider.enabled = false;
+            if (Collider != null) Collider.enabled = false;
             StartCoroutine(FlyAwayAndHide());
         }
 
@@ -32,15 +38,14 @@ namespace CandyShop
         public void RemoveImmediate()
         {
             Picked = true;
-            if (_collider != null) _collider.enabled = false;
-            gameObject.SetActive(false);
+            if (Collider != null) Collider.enabled = false;
+            DeactivateToPool();
         }
 
         public void ResetForReuse()
         {
             Picked = false;
-            if (_collider == null) _collider = GetComponent<Collider>();
-            if (_collider != null) _collider.enabled = true;
+            if (Collider != null) Collider.enabled = true;
             gameObject.SetActive(true);
         }
 
@@ -59,8 +64,16 @@ namespace CandyShop
                 transform.localScale = scale * (1f - 0.7f * k);
                 yield return null;
             }
-            gameObject.SetActive(false);
             transform.localScale = scale;
+            DeactivateToPool();
+        }
+
+        // Deactivate and hand back to the GameObject pool (supplements 2.0).
+        private void DeactivateToPool()
+        {
+            gameObject.SetActive(false);
+            CandyPool.Release(this);
+            if (_pile != null) _pile.NotifyInstanceReleased(this);
         }
     }
 }

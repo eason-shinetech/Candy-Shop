@@ -15,5 +15,5 @@ MonoBehaviour:
   quota: 12
   biasChance: 0.7
   lockedDiscount: 0.2
-  rewardCoins: 120
+  rewardCoins: 450
   rewardFreezeCount: 1

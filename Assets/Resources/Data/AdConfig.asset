@@ -20,3 +20,4 @@ MonoBehaviour:
   maxRewardCoinsPerDay: 4
   maxDoubleServePerRun: 3
   maxRevivePerRun: 1
+  maxStaminaAdsPerDate: 3

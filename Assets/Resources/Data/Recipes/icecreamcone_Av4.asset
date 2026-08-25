@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: icecreamcone_Av4
   candyType: {fileID: 11400000, guid: 331c00f5a36a18842b87749a3fbc8794, type: 2}
-  cost: 1800
+  cost: 5000
+  starRank: 3
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

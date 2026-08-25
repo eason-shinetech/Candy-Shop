@@ -129,6 +129,7 @@ namespace CandyShop.EditorTools
             public string nameEn;
             public bool isStarter;
             public int cost; // -1 for starters
+            public int starRank = 1;
             public GameObject prefab;
         }
 
@@ -247,6 +248,10 @@ namespace CandyShop.EditorTools
                 UIKit.SugarPink, UIKit.SkyMint, UIKit.Lemon, UIKit.Grape, UIKit.Ice, UIKit.MagnetRed, UIKit.Wind
             };
 
+            // Star-rank assignment (supplements 2.0): deterministic equal bands across the
+            // sorted non-starter catalog, so rank 1..5 each get ~1/5 of the recipes.
+            int totalRecipes = sortedNames.Count - starterNames.Count;
+
             int zhIndex = 0;
             int recipeIndex = 0;
             foreach (var meshName in sortedNames)
@@ -269,6 +274,13 @@ namespace CandyShop.EditorTools
                 UnityEngine.Object.DestroyImmediate(clone);
 
                 bool isStarter = starterNames.Contains(meshName);
+                int starRank = 1;
+                if (!isStarter)
+                {
+                    starRank = 1 + recipeIndex * 5 / Mathf.Max(1, totalRecipes);
+                    starRank = Mathf.Clamp(starRank, 1, 5);
+                }
+
                 var entry = new CatalogEntry
                 {
                     meshName = meshName,
@@ -276,7 +288,9 @@ namespace CandyShop.EditorTools
                     nameZh = ToZh(meshName, zhIndex),
                     nameEn = ToEn(meshName, zhIndex),
                     isStarter = isStarter,
-                    cost = isStarter ? -1 : 120 + recipeIndex * 60,
+                    // Star-rank price table replaces the old linear formula (supplements 2.0).
+                    cost = isStarter ? -1 : RecipeDefinition.CostForRank(starRank),
+                    starRank = starRank,
                     prefab = prefab
                 };
 
@@ -295,6 +309,7 @@ namespace CandyShop.EditorTools
                     recipe.recipeId = entry.typeId;
                     recipe.candyType = def;
                     recipe.cost = entry.cost;
+                    recipe.starRank = starRank;
                     AssetDatabase.CreateAsset(recipe, $"{RecipesDir}/{entry.typeId}.asset");
                     recipeIndex++;
                 }
@@ -303,8 +318,101 @@ namespace CandyShop.EditorTools
                 zhIndex++;
             }
 
+            BuildSpecialEditions(entries);
             AssetDatabase.SaveAssets();
             return entries;
+        }
+
+        // Special editions (supplements 2.0): same mesh, different color. Unlocked via
+        // collection milestones only — never coin buy, never ads. ~50/50 track split.
+        private static void BuildSpecialEditions(List<CatalogEntry> normalEntries)
+        {
+            // Clean previous specials so re-runs stay deterministic.
+            foreach (var f in Directory.GetFiles(RecipesDir))
+                if (!f.EndsWith(".meta") && Path.GetFileName(f).Contains("_special"))
+                    AssetDatabase.DeleteAsset(f.Replace('\\', '/'));
+            foreach (var f in Directory.GetFiles(CatalogDir))
+                if (!f.EndsWith(".meta") && Path.GetFileName(f).Contains("_special"))
+                    AssetDatabase.DeleteAsset(f.Replace('\\', '/'));
+            foreach (var f in Directory.GetFiles(PrefabCandyDir))
+                if (!f.EndsWith(".meta") && Path.GetFileName(f).Contains("_special"))
+                    AssetDatabase.DeleteAsset(f.Replace('\\', '/'));
+
+            // (base typeId, zh suffix, en suffix, track) — 4 owned-track + 4 sign-in-track.
+            var plan = new[]
+            {
+                new[] { "lollipop_A", "薄荷特别版", " Mint Special", "0" },
+                new[] { "donut_A", "草莓特别版", " Strawberry Special", "0" },
+                new[] { "cupcake_A", "葡萄特别版", " Grape Special", "0" },
+                new[] { "icecream_A", "柠檬特别版", " Lemon Special", "0" },
+                new[] { "cookie_A", "薄荷特别版", " Mint Special", "1" },
+                new[] { "jelly", "莓果特别版", " Berry Special", "1" },
+                new[] { "milkshake_A", "可可特别版", " Cocoa Special", "1" },
+                new[] { "cake_big", "云朵特别版", " Cloud Special", "1" }
+            };
+
+            var tints = new[]
+            {
+                new Color(0.55f, 0.95f, 0.8f),   // mint
+                new Color(1f, 0.62f, 0.72f),     // strawberry
+                new Color(0.72f, 0.6f, 1f),      // grape
+                new Color(1f, 0.9f, 0.5f),       // lemon
+                new Color(0.55f, 0.95f, 0.8f),   // mint
+                new Color(1f, 0.6f, 0.65f),      // berry
+                new Color(0.75f, 0.58f, 0.45f),  // cocoa
+                new Color(0.85f, 0.92f, 1f)      // cloud
+            };
+
+            foreach (var row in plan)
+            {
+                string baseId = row[0];
+                var baseEntry = normalEntries.Find(e => e.typeId == baseId);
+                if (baseEntry == null || baseEntry.prefab == null) continue; // family missing from kit
+
+                // Tinted prefab: clone materials so the base candy keeps its look.
+                var clone = UnityEngine.Object.Instantiate(baseEntry.prefab);
+                clone.name = "Candy_" + baseId + "_special";
+                Color tint = tints[Array.IndexOf(plan, row)];
+                foreach (var renderer in clone.GetComponentsInChildren<Renderer>())
+                {
+                    var mats = renderer.sharedMaterials;
+                    for (int m = 0; m < mats.Length; m++)
+                    {
+                        if (mats[m] == null) continue;
+                        var tinted = new Material(mats[m]) { color = Color.Lerp(mats[m].color, tint, 0.65f) };
+                        string matPath = $"{PrefabCandyDir}/Materials/Mat_{baseId}_special_{m}.mat";
+                        var matDir = Path.GetDirectoryName(matPath);
+                        if (!Directory.Exists(matDir)) Directory.CreateDirectory(matDir);
+                        AssetDatabase.CreateAsset(tinted, matPath);
+                        mats[m] = tinted;
+                    }
+                    renderer.sharedMaterials = mats;
+                }
+                string specialPrefabPath = $"{PrefabCandyDir}/Candy_{baseId}_special.prefab";
+                var specialPrefab = PrefabUtility.SaveAsPrefabAsset(clone, specialPrefabPath);
+                UnityEngine.Object.DestroyImmediate(clone);
+
+                // Candy type (enters pile/orders only once unlocked via unlockedRecipeIds).
+                var def = ScriptableObject.CreateInstance<CandyTypeDefinition>();
+                def.typeId = baseId + "_special";
+                def.displayNameZh = baseEntry.nameZh + row[1];
+                def.displayNameEn = baseEntry.nameEn + row[2];
+                def.prefab = specialPrefab;
+                def.isStarter = false;
+                def.isSpecial = true;
+                def.chipColor = tint;
+                AssetDatabase.CreateAsset(def, $"{CatalogDir}/{def.typeId}.asset");
+
+                var recipe = ScriptableObject.CreateInstance<RecipeDefinition>();
+                recipe.recipeId = def.typeId;
+                recipe.candyType = def;
+                recipe.cost = 0; // milestone reward, not purchasable
+                recipe.starRank = Mathf.Clamp(baseEntry.starRank, 1, 5);
+                recipe.isSpecial = true;
+                recipe.specialTrack = int.Parse(row[3]);
+                recipe.baseRecipeId = baseId;
+                AssetDatabase.CreateAsset(recipe, $"{RecipesDir}/{def.typeId}.asset");
+            }
         }
 
         private static bool IsExcluded(Transform t)
@@ -337,9 +445,9 @@ namespace CandyShop.EditorTools
             var tornadoVfx = CreateVfx("Vfx_Tornado", UIKit.Wind, true, ParticleSystemShapeType.Donut);
             var freezeVfx = CreateVfx("Vfx_Freeze", UIKit.Ice, true, ParticleSystemShapeType.Hemisphere);
 
-            CreatePowerUpDef("magnet", "磁铁", 50, 0f, magnetVfx, UIKit.MagnetRed, "Magnet");
-            CreatePowerUpDef("tornado", "龙卷风", 40, 4f, tornadoVfx, new Color(0.55f, 0.85f, 0.65f), "Tornado");
-            CreatePowerUpDef("freeze", "冰冻", 35, 5f, freezeVfx, UIKit.Ice, "Freeze");
+            CreatePowerUpDef("magnet", "磁铁", 250, 0f, magnetVfx, UIKit.MagnetRed, "Magnet");
+            CreatePowerUpDef("tornado", "龙卷风", 200, 4f, tornadoVfx, new Color(0.55f, 0.85f, 0.65f), "Tornado");
+            CreatePowerUpDef("freeze", "冰冻", 175, 5f, freezeVfx, UIKit.Ice, "Freeze");
             AssetDatabase.SaveAssets();
         }
 
@@ -424,9 +532,10 @@ namespace CandyShop.EditorTools
             });
             CreateConfig<EconomyConfig>("EconomyConfig", c =>
             {
-                c.baseReward = 8; c.perCandy = 1; c.speedBonusMax = 24; c.minReward = 10;
-                c.perfectBonus = 5; c.dailyCoins = 200; c.streakRecipeDay = 7; c.allUnlockedBonus = 500;
-                c.dailyExtraAdCoins = 50; c.recipeBaseCost = 120; c.recipeCostStep = 60; c.adCoinGrant = 80;
+                c.baseReward = 32; c.perCandy = 4; c.speedBonusMax = 96; c.minReward = 40;
+                c.perfectBonus = 25; c.dailyCoins = 500; c.streakRecipeDay = 7; c.allUnlockedBonus = 500;
+                c.dailyExtraAdCoins = 50; c.streakSevenStaminaGrant = 5;
+                c.recipeBaseCost = 120; c.recipeCostStep = 60; c.adCoinGrant = 80;
             });
             CreateConfig<AdConfig>("AdConfig", c =>
             {
@@ -438,12 +547,13 @@ namespace CandyShop.EditorTools
             CreateConfig<DailyChallengeConfig>("DailyChallengeConfig", c =>
             {
                 c.quota = 12; c.biasChance = 0.7f; c.lockedDiscount = 0.2f;
-                c.rewardCoins = 120; c.rewardFreezeCount = 1;
+                c.rewardCoins = 450; c.rewardFreezeCount = 1;
             });
             CreateConfig<StaminaConfig>("StaminaConfig", c =>
             {
                 c.dailyMax = 20; c.costPerCustomer = 1;
                 c.perfectRefund = 1; c.passDelta = 0; c.failPenalty = 3;
+                c.maxPerfectRefundsPerDay = 5; c.bonusOverflowMax = 5;
             });
             AssetDatabase.SaveAssets();
         }
@@ -579,11 +689,13 @@ namespace CandyShop.EditorTools
             var sb = new StringBuilder();
             sb.AppendLine("# Candy Catalog (generated from Assets/Art/Candy/candy_kit.fbx)");
             sb.AppendLine();
-            sb.AppendLine("| Mesh | CandyTypeId | Starter / Recipe | Cost | ZH Name |");
-            sb.AppendLine("| --- | --- | --- | --- | --- |");
+            // i18n spec section 3: catalog rows carry name_zh / name_en so no FBX names reach the HUD.
+            // Supplements 2.0: rank + special columns document the star-rank economy.
+            sb.AppendLine("| Mesh | CandyTypeId | Starter / Recipe | Rank | Cost | name_zh | name_en |");
+            sb.AppendLine("| --- | --- | --- | --- | --- | --- | --- |");
             foreach (var e in catalog)
             {
-                sb.AppendLine($"| {e.meshName} | {e.typeId} | {(e.isStarter ? "Starter (free)" : "Recipe")} | {(e.isStarter ? "-" : e.cost.ToString())} | {e.nameZh} |");
+                sb.AppendLine($"| {e.meshName} | {e.typeId} | {(e.isStarter ? "Starter (free)" : $"Recipe ★{e.starRank}")} | {(e.isStarter ? "-" : e.starRank.ToString())} | {(e.isStarter ? "-" : e.cost.ToString())} | {e.nameZh} | {e.nameEn} |");
             }
             sb.AppendLine();
             sb.AppendLine($"Total candy types: **{catalog.Count}** ({catalog.Count(x => x.isStarter)} starters, {catalog.Count(x => !x.isStarter)} recipes).");

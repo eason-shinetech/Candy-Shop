@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: icecream_sandwichv2
   candyType: {fileID: 11400000, guid: ecb8ab70e0f5ffb40bee6163a5d8a7af, type: 2}
-  cost: 2280
+  cost: 5000
+  starRank: 3
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

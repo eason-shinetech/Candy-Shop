@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: candycurvev2
   candyType: {fileID: 11400000, guid: 250cab77aa883244e84050d07d807659, type: 2}
-  cost: 540
+  cost: 1000
+  starRank: 1
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: cake_small
   displayNameZh: "\u86CB\u7CD5\u7CD6"
   displayNameEn: Cake
-  prefab: {fileID: 6798744411123682961, guid: 6cddfa93430736e44b2428c9d2368ad5, type: 3}
+  prefab: {fileID: 4584189314983907718, guid: 6cddfa93430736e44b2428c9d2368ad5, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.72156864, g: 0.9098039, b: 1, a: 1}

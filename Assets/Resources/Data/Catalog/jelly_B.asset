@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: jelly_B
   displayNameZh: "\u679C\u51BB\u7CD6"
   displayNameEn: Jelly
-  prefab: {fileID: 8996348168711482387, guid: 77d9342872b25b9448fb551d4aeb0901, type: 3}
+  prefab: {fileID: 6716011078863359934, guid: 77d9342872b25b9448fb551d4aeb0901, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}

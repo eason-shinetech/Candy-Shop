@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: candycurvev2
   displayNameZh: "\u7CD6\u679C"
   displayNameEn: Candy
-  prefab: {fileID: 2411707316629685830, guid: a6a672ff5fd2457459a41ba18143a877, type: 3}
+  prefab: {fileID: 6272213208492215930, guid: a6a672ff5fd2457459a41ba18143a877, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.49411765, g: 0.8784314, b: 0.7764706, a: 1}

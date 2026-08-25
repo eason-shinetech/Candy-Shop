@@ -61,6 +61,9 @@ Keys are stable. If a screen needs a new sentence, add a key to **both** files.
 | `signin_claim` | 领取 | Claim |
 | `signin_close` | 关闭 | Close |
 | `signin_streak` | 已连续签到 {0} 天 | {0}-day streak |
+| `signin_coins` | 每日签到 +{0} 金币 | Daily sign-in: +{0} coins |
+| `signin_streak_reward` | 连续签到奖励：解锁新配方 {0} | Streak reward: unlocked recipe {0} |
+| `signin_streak_stamina` | 连续签到奖励：体力+{0} | Streak reward: +{0} stamina |
 | `ad_extra_50` | 看广告再领 50 金币 | Watch ad for +50 coins |
 | `recipe_buy` | 购买 | Buy |
 | `recipe_owned` | 已解锁 | Unlocked |
@@ -98,6 +101,7 @@ Keys are stable. If a screen needs a new sentence, add a key to **both** files.
 | `stamina_frac` | {0}/{1} | {0}/{1} |
 | `stamina_minus_one` | 体力-1 | Stamina −1 |
 | `hud_stamina_plus` | 体力+1 | Stamina +1 |
+| `hud_stamina_bonus` | 体力+{0} | Stamina +{0} |
 | `hud_stamina_fail` | 体力-3 | Stamina −3 |
 | `stamina_empty_title` | 今天累了 | Out of energy |
 | `stamina_empty_body` | 体力用完了，明天再来营业吧 | No stamina left. Come back tomorrow. |

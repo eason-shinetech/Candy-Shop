@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: cherry
   candyType: {fileID: 11400000, guid: 620f63213b211b246b12e7dcc6c94c8f, type: 2}
-  cost: 600
+  cost: 1000
+  starRank: 1
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

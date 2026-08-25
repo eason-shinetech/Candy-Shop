@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7130680973832991342
+--- !u!1 &8125080428303448598
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2597933330601826327}
-  - component: {fileID: 4661890088963995372}
-  - component: {fileID: 5182570975825601490}
+  - component: {fileID: 4548789880097816146}
+  - component: {fileID: 4688697140360714955}
+  - component: {fileID: 3309739484309604551}
   m_Layer: 0
   m_Name: Candy_icecreamcone_A
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2597933330601826327
+--- !u!4 &4548789880097816146
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7130680973832991342}
+  m_GameObject: {fileID: 8125080428303448598}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071069, y: 0, z: 0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -33,21 +33,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &4661890088963995372
+--- !u!33 &4688697140360714955
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7130680973832991342}
+  m_GameObject: {fileID: 8125080428303448598}
   m_Mesh: {fileID: 21050174609857822, guid: db1a60bb996c9d14fab9d9796c920d26, type: 3}
---- !u!23 &5182570975825601490
+--- !u!23 &3309739484309604551
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7130680973832991342}
+  m_GameObject: {fileID: 8125080428303448598}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

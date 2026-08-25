@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: milkshake_A
   candyType: {fileID: 11400000, guid: 22c4786569fc99448bd0c2a897b1177d, type: 2}
-  cost: 2760
+  cost: 8000
+  starRank: 4
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

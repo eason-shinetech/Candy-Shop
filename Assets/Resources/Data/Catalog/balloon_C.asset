@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: balloon_C
   displayNameZh: "\u6C14\u7403\u8F6F\u7CD6"
   displayNameEn: Balloon Gummy
-  prefab: {fileID: 3938624025209048135, guid: 04d068431ed2ba34a8166801d25c32a0, type: 3}
+  prefab: {fileID: 2089517881594076912, guid: 04d068431ed2ba34a8166801d25c32a0, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 1, g: 0.8784314, b: 0.47843137, a: 1}

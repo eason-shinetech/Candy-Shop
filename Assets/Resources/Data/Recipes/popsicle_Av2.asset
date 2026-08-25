@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: popsicle_Av2
   candyType: {fileID: 11400000, guid: 9e510c0dd50ac6848ac23b38dbfc3b73, type: 2}
-  cost: 3420
+  cost: 8000
+  starRank: 4
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

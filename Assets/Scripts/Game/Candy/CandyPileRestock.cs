@@ -25,12 +25,20 @@ namespace CandyShop
         private float _liftDuration;
         private readonly Dictionary<Transform, Vector3> _origLocalPos = new Dictionary<Transform, Vector3>();
 
+        // Idle jiggle state (supplements 1.7)
+        private Vector3 _pileBasePos;
+
+        [Header("Budget")]
+        [Tooltip("Hard cap on active pile instances to protect mobile performance.")]
+        public int maxTotalInstances = 420;
+
         public bool IsBusyLifting => _lifting;
 
         private void Awake()
         {
             if (pileRoot == null) pileRoot = transform;
             if (game == null) game = FindObjectOfType<GameManager>();
+            _pileBasePos = pileRoot.position;
         }
 
         public void EnsurePile()
@@ -41,6 +49,23 @@ namespace CandyShop
 
             foreach (var type in unlocked)
                 FillType(type, cfg.targetInstancesPerType);
+        }
+
+        // Fill only the types the current order can request; keeps the pile small on low-end devices.
+        public void EnsurePileForOrder(CustomerOrderState order)
+        {
+            if (order == null) return;
+            foreach (var t in order.types)
+                FillType(t, game.orderConfig.targetInstancesPerType);
+        }
+
+        public void EndLiftImmediately()
+        {
+            if (!_lifting) return;
+            foreach (var kvp in _origLocalPos)
+                if (kvp.Key != null) kvp.Key.localPosition = kvp.Value;
+            _origLocalPos.Clear();
+            _lifting = false;
         }
 
         private void FillType(CandyTypeDefinition type, int target)
@@ -58,28 +83,48 @@ namespace CandyShop
             }
 
             int toAdd = target - ActiveCount(list);
+            if (toAdd <= 0) return;
+            if (_instances.Count + toAdd > maxTotalInstances)
+                toAdd = Mathf.Max(0, maxTotalInstances - _instances.Count);
             for (int i = 0; i < toAdd; i++)
             {
                 Vector2 r = Random.insideUnitCircle * pileRadius;
                 Vector3 finalPos = new Vector3(r.x, Random.Range(0f, stackHeight), r.y);
-                var go = Instantiate(type.prefab, finalPos + Vector3.up * 2.5f, Random.rotation, pileRoot);
-                go.name = "Candy_" + type.typeId + "_" + i;
 
-                // One sphere collider per instance keeps picking simple and cheap.
-                var bounds = ComputeBounds(go);
-                float radius = Mathf.Max(0.18f, Mathf.Max(bounds.extents.x, Mathf.Max(bounds.extents.y, bounds.extents.z)) * 0.9f);
-                var col = go.AddComponent<SphereCollider>();
-                col.radius = radius / Mathf.Max(Mathf.Epsilon, MaxScale(go.transform));
-                col.center = go.transform.InverseTransformPoint(bounds.center);
+                // GameObject pool (supplements 2.0): reuse released instances per prefab.
+                var inst = CandyPool.Acquire(type, finalPos + Vector3.up * 2.5f, Random.rotation, pileRoot,
+                    fresh =>
+                    {
+                        fresh.gameObject.name = "Candy_" + type.typeId;
 
-                var inst = go.AddComponent<CandyInstance>();
+                        // One sphere collider per instance keeps picking simple and cheap.
+                        var bounds = ComputeBounds(fresh.gameObject);
+                        float radius = Mathf.Max(0.18f, Mathf.Max(bounds.extents.x, Mathf.Max(bounds.extents.y, bounds.extents.z)) * 0.9f);
+                        var col = fresh.gameObject.AddComponent<SphereCollider>();
+                        col.radius = radius / Mathf.Max(Mathf.Epsilon, MaxScale(fresh.transform));
+                        col.center = fresh.transform.InverseTransformPoint(bounds.center);
+                    });
+                if (inst == null) continue;
+
                 inst.candyTypeId = type.typeId;
                 inst.definition = type;
-                list.Add(inst);
-                _instances.Add(inst);
+                if (!list.Contains(inst)) list.Add(inst);
+                if (!_instances.Contains(inst)) _instances.Add(inst);
 
-                StartCoroutine(DropIn(go.transform, finalPos));
+                StartCoroutine(DropIn(inst.transform, finalPos));
             }
+        }
+
+        // Pool callback: an instance was released (deactivated after pick/remove).
+        public void NotifyInstanceReleased(CandyInstance inst)
+        {
+            // Lists keep the reference; ActiveCount skips inactive ones, so restock
+            // budgets stay correct without list churn here.
+        }
+
+        private void OnDisable()
+        {
+            CandyPool.Clear();
         }
 
         // Simple drop-in so new candies lerp down from above.
@@ -121,10 +166,11 @@ namespace CandyShop
             return n;
         }
 
-        // Refill all unlocked types after serving a customer or starting an order.
+        // Refill only what the current order needs (performance budget).
         public void RestockForOrder(CustomerOrderState order)
         {
-            EnsurePile();
+            if (order == null) return;
+            EnsurePileForOrder(order);
         }
 
         // Called when remaining pickable candies of a requested type hit 0.
@@ -163,14 +209,24 @@ namespace CandyShop
 
         private void Update()
         {
-            if (!_lifting) return;
+            if (_lifting)
+            {
+                UpdateLift();
+                return;
+            }
+
+            // Subtle idle jiggle on the pile root (supplements 1.7).
+            float bob = Mathf.Sin(Time.time * 1.4f) * 0.03f;
+            pileRoot.position = _pileBasePos + Vector3.up * bob;
+        }
+
+        private void UpdateLift()
+        {
             _liftTimer += Time.deltaTime;
 
             if (_liftTimer >= _liftDuration)
             {
-                foreach (var kvp in _origLocalPos)
-                    if (kvp.Key != null) kvp.Key.localPosition = kvp.Value;
-                _lifting = false;
+                EndLiftImmediately();
                 return;
             }
 

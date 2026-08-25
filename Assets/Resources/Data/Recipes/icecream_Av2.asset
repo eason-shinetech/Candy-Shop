@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: icecream_Av2
   candyType: {fileID: 11400000, guid: e7a75b29174fb994fa0a3579fdcc2fec, type: 2}
-  cost: 1920
+  cost: 5000
+  starRank: 3
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

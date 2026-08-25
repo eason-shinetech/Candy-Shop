@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: cottoncandy_B
   candyType: {fileID: 11400000, guid: 396d1170cd679ea4f9648c3be6c7c839, type: 2}
-  cost: 1020
+  cost: 3000
+  starRank: 2
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

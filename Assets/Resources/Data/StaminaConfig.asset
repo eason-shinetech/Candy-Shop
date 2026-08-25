@@ -17,3 +17,7 @@ MonoBehaviour:
   perfectRefund: 1
   passDelta: 0
   failPenalty: 3
+  maxPerfectRefundsPerDay: 5
+  bonusOverflowMax: 5
+  staminaAdGrant: 5
+  signInStaminaGrant: 3

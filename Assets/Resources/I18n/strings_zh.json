@@ -1,4 +1,4 @@
-{
+﻿{
   "entries": [
     {
       "key": "app_title",
@@ -37,8 +37,48 @@
       "value": "放弃本局"
     },
     {
+      "key": "special_badge",
+      "value": "特别版"
+    },
+    {
+      "key": "special_progress",
+      "value": "特别版 {0}/{1}"
+    },
+    {
+      "key": "special_locked_hint",
+      "value": "完成收集里程碑解锁"
+    },
+    {
+      "key": "special_milestone_tag",
+      "value": "里程碑奖励"
+    },
+    {
+      "key": "special_track_shelf",
+      "value": "收集 {0} 个普通配方"
+    },
+    {
+      "key": "special_track_band",
+      "value": "集齐所有 {0}★ 配方"
+    },
+    {
+      "key": "special_track_full",
+      "value": "收集全部普通配方"
+    },
+    {
+      "key": "special_toast",
+      "value": "新特别版：{0}"
+    },
+    {
+      "key": "ad_stamina",
+      "value": "看广告恢复 {0} 体力"
+    },
+    {
+      "key": "coin_penalty_toast",
+      "value": "金币-{0}"
+    },
+    {
       "key": "btn_quit_confirm",
-      "value": "真的要打烊吗？当前客人会失败（体力-3），本局星星和进度会结束"
+      "value": "真的要打烊吗？当前客人会失败（体力-3，金币也会扣一部分），本局星星和进度会结束"
     },
     {
       "key": "btn_confirm",
@@ -135,6 +175,10 @@
     {
       "key": "signin_streak_reward",
       "value": "连续签到奖励：解锁新配方 {0}"
+    },
+    {
+      "key": "signin_streak_stamina",
+      "value": "连续签到奖励：体力+{0}"
     },
     {
       "key": "signin_all_recipes",
@@ -331,6 +375,10 @@
     {
       "key": "hud_stamina_plus",
       "value": "体力+1"
+    },
+    {
+      "key": "hud_stamina_bonus",
+      "value": "体力+{0}"
     },
     {
       "key": "hud_stamina_fail",

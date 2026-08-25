@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: donut_B
   displayNameZh: "\u751C\u751C\u5708\u7CD6"
   displayNameEn: Donut
-  prefab: {fileID: 6267831952735041210, guid: 0b766df8337e73d4ca0f985b751da646, type: 3}
+  prefab: {fileID: 158290331292023422, guid: 0b766df8337e73d4ca0f985b751da646, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.654902, g: 0.54509807, b: 0.98039216, a: 1}

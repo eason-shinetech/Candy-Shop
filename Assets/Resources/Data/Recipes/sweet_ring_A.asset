@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: sweet_ring_A
   candyType: {fileID: 11400000, guid: 4e646a6aa86a68d4dac1e758983761e6, type: 2}
-  cost: 3900
+  cost: 10000
+  starRank: 5
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

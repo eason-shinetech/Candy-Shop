@@ -11,6 +11,7 @@ namespace CandyShop
         public int coinsGranted;
         public string grantedRecipeName;
         public int allUnlockedBonus;
+        public int staminaGranted;
         public bool dailyExtraAdAvailable;
     }
 
@@ -40,20 +41,62 @@ namespace CandyShop
                 result.coinsGranted = econ.dailyCoins;
                 result.anyReward = true;
 
-                // Streak reaches 7 on this claim: unlock the cheapest remaining recipe (once per cycle).
-                if (save.dailyStreak == econ.streakRecipeDay && recipesSortedByCost != null)
+                // Every daily claim also grants stamina (supplements 2.0, always-add-then-clamp rule).
+                // The date refresh in StaminaService usually filled the pool to max first, so this is
+                // often a no-op; the panel only shows the line when stamina actually increased.
+                var staminaCfg = Resources.Load<StaminaConfig>("Data/StaminaConfig");
+                if (staminaCfg != null && staminaCfg.signInStaminaGrant > 0)
+                    result.staminaGranted += StaminaService.GrantHardClamped(staminaCfg.signInStaminaGrant);
+
+                // Streak reaches 7 on this claim: unlock the cheapest remaining NORMAL recipe
+                // (once per cycle). Once all normals are owned, the slot grants a sign-in-track
+                // special edition instead (supplements 2.0 long line).
+                if (save.dailyStreak == econ.streakRecipeDay)
                 {
-                    foreach (var recipe in recipesSortedByCost)
+                    save.sevenCyclesCompleted++;
+
+                    bool grantedNormal = false;
+                    if (recipesSortedByCost != null)
                     {
-                        if (recipe == null || recipe.candyType == null) continue;
-                        if (Array.IndexOf(save.unlockedRecipeIds, recipe.recipeId) < 0)
+                        foreach (var recipe in recipesSortedByCost)
                         {
-                            UnlockRecipe(save, recipe);
-                            result.grantedRecipeName = recipe.candyType.displayNameZh;
-                            break;
+                            if (recipe == null || recipe.isSpecial || recipe.candyType == null) continue;
+                            if (Array.IndexOf(save.unlockedRecipeIds, recipe.recipeId) < 0)
+                            {
+                                UnlockRecipe(save, recipe);
+                                result.grantedRecipeName = recipe.candyType.LocalizedName;
+                                grantedNormal = true;
+                                break;
+                            }
                         }
                     }
+
+                    if (!grantedNormal)
+                    {
+                        // Streak-7 slot falls through to the sign-in long line.
+                        if (CollectionService.GrantSignInTrackSpecial(save, recipesSortedByCost))
+                            result.anyReward = true;
+                    }
+
+                    // Long-line steps: 2nd / 3rd / 4th time the streak hits 7 each grant 1 special.
+                    int cycles = save.sevenCyclesCompleted;
+                    if (cycles >= 2 && cycles <= 4)
+                    {
+                        if (CollectionService.GrantSignInTrackSpecial(save, recipesSortedByCost))
+                            result.anyReward = true;
+                    }
+
+                    int staminaGrant = econ.streakSevenStaminaGrant;
+                    if (staminaGrant > 0)
+                    {
+                        result.staminaGranted += StaminaService.GrantBonus(staminaGrant);
+                    }
                 }
+
+                if (result.staminaGranted > 0) result.anyReward = true;
+
+                // Owned-count milestones may fire after sign-in recipe grants (catch-up).
+                CollectionService.CheckOwnedMilestones(save, recipesSortedByCost);
             }
 
             // All recipes unlocked bonus (+500), once ever.
@@ -111,14 +154,20 @@ namespace CandyShop
 
             if (save.dailyChallengeDate == Today) return; // do not re-roll mid-day
 
+            // Special editions are milestone rewards, not daily-challenge candidates.
+            var pool = new List<CandyTypeDefinition>();
+            foreach (var c in catalog)
+                if (c != null && !c.isSpecial) pool.Add(c);
+            if (pool.Count == 0) return;
+
             int hash = StableHash(Today);
-            int index = hash % catalog.Length;
-            if (catalog.Length > 1 && catalog[index].typeId == save.dailyChallengeYesterdayId)
-                index = (index + 1) % catalog.Length;
+            int index = hash % pool.Count;
+            if (pool.Count > 1 && pool[index].typeId == save.dailyChallengeYesterdayId)
+                index = (index + 1) % pool.Count;
 
             save.dailyChallengeDate = Today;
-            save.dailyChallengeTypeId = catalog[index].typeId;
-            save.dailyChallengeYesterdayId = catalog[index].typeId;
+            save.dailyChallengeTypeId = pool[index].typeId;
+            save.dailyChallengeYesterdayId = pool[index].typeId;
             save.dailyChallengeProgress = 0;
             save.dailyChallengeClaimed = false;
         }

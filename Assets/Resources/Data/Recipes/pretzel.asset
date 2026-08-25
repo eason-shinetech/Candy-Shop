@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: pretzel
   candyType: {fileID: 11400000, guid: 9971a1a41a6469741913003cd1ff420c, type: 2}
-  cost: 3660
+  cost: 10000
+  starRank: 5
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

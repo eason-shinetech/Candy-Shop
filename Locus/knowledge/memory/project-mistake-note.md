@@ -10,4 +10,5 @@ maintenanceRules: |-
   - Remove outdated issues, non-reproducible issues, and unsupported guesses
 ---
 
+- SafeAreaFitter white-screen freeze (fixed): `OnRectTransformDimensionsChange` fires synchronously when Apply() writes anchors, so Apply -> callback -> Apply recursed forever and froze the Editor on Play (Boot -> MainMenu BuildUI). Avoidance: any RectTransform write inside `OnRectTransformDimensionsChange` must have a re-entrance guard (compare against last-applied value and early-return).
 

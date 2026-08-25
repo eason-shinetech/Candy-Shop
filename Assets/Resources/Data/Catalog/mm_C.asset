@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: mm_C
   displayNameZh: "\u5DE7\u514B\u529B\u8C46"
   displayNameEn: Choco Bean
-  prefab: {fileID: 1974221148067318693, guid: 2a516f80d739f2b4c9fabc2e65b97cf9, type: 3}
+  prefab: {fileID: 1248322325762636136, guid: 2a516f80d739f2b4c9fabc2e65b97cf9, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 1, g: 0.8784314, b: 0.47843137, a: 1}

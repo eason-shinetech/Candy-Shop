@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: swiss_roll
   candyType: {fileID: 11400000, guid: 8d4133dfcd39f09418ab3ea14bbae4f6, type: 2}
-  cost: 4080
+  cost: 10000
+  starRank: 5
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

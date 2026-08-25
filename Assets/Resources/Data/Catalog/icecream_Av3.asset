@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: icecream_Av3
   displayNameZh: "\u51B0\u6DC7\u6DCB\u7CD6"
   displayNameEn: Ice Cream
-  prefab: {fileID: 8519073005394922993, guid: 58caacdc5d51dc945bc38e8affce011b, type: 3}
+  prefab: {fileID: 8347304277328101675, guid: 58caacdc5d51dc945bc38e8affce011b, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}

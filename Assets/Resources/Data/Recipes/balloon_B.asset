@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: balloon_B
   candyType: {fileID: 11400000, guid: bcabc2c1f6b0be5409aa05870cd46c1d, type: 2}
-  cost: 120
+  cost: 1000
+  starRank: 1
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

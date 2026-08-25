@@ -15,6 +15,8 @@ namespace CandyShop
         private int _powerupBuyAdsToday = 0;
         private string _coinAdDate = "";
         private int _coinAdsToday = 0;
+        private string _staminaAdDate = "";
+        private int _staminaAdsToday = 0;
         private float _lastOptionalRewardedTime = -999f;
 
         public StubAdService(AdConfig config, SaveDataModel save)
@@ -42,6 +44,11 @@ namespace CandyShop
                 _coinAdDate = today;
                 _coinAdsToday = 0;
             }
+            if (_staminaAdDate != today)
+            {
+                _staminaAdDate = today;
+                _staminaAdsToday = 0;
+            }
         }
 
         public bool IsReady(AdPlacement placement)
@@ -55,6 +62,8 @@ namespace CandyShop
                     return _powerupBuyAdsToday < _config.maxPowerupBuyAdsPerDay;
                 case AdPlacement.reward_coins:
                     return OptionalCapOk() && _coinAdsToday < _config.maxRewardCoinsPerDay;
+                case AdPlacement.reward_stamina:
+                    return OptionalCapOk() && _staminaAdsToday < _config.maxStaminaAdsPerDate;
                 case AdPlacement.reward_daily_extra:
                     return OptionalCapOk() && _save.dailyCoinAdClaimedDate != DateTime.Now.ToString("yyyy-MM-dd");
                 case AdPlacement.reward_double_serve:
@@ -107,6 +116,7 @@ namespace CandyShop
                     _lastOptionalRewardedTime = Time.realtimeSinceStartup;
                     _save.adsWatchedCountToday++;
                     if (placement == AdPlacement.reward_coins) _coinAdsToday++;
+                    if (placement == AdPlacement.reward_stamina) _staminaAdsToday++;
                     SaveDataService.Save();
                 }
                 if (pausedRun && game != null) game.SetPaused(false);

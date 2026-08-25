@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 919e9a25556cf984b953cb5a27c87200, type: 3}
   m_Name: EconomyConfig
   m_EditorClassIdentifier: 
-  baseReward: 8
-  perCandy: 1
-  speedBonusMax: 24
-  minReward: 10
-  perfectBonus: 5
-  dailyCoins: 200
+  baseReward: 32
+  perCandy: 4
+  speedBonusMax: 96
+  minReward: 40
+  perfectBonus: 25
+  dailyCoins: 500
   streakRecipeDay: 7
   allUnlockedBonus: 500
   dailyExtraAdCoins: 50
+  streakSevenStaminaGrant: 5
   recipeBaseCost: 120
   recipeCostStep: 60
   adCoinGrant: 80
+  failCoinPenaltyRatio: 0.25
+  failCoinPenaltyMin: 20

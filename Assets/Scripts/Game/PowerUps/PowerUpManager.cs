@@ -136,14 +136,17 @@ namespace CandyShop
                 Debug.LogError("Missing VFX prefab for " + def.powerUpId + "; applying gameplay anyway");
                 return;
             }
-            var handle = vfx.PlayLoop(def.vfxPrefab, PileCenter());
-            StartCoroutine(StopAfter(handle, duration));
+            _activeVfxHandle = vfx.PlayLoop(def.vfxPrefab, PileCenter());
+            StartCoroutine(StopAfter(_activeVfxHandle, duration));
         }
+
+        private GameObject _activeVfxHandle;
 
         private IEnumerator StopAfter(GameObject handle, float seconds)
         {
             yield return new WaitForSeconds(seconds);
             if (vfx != null) vfx.StopLoop(handle);
+            if (handle == _activeVfxHandle) _activeVfxHandle = null;
         }
 
         private Vector3 PileCenter()
@@ -255,6 +258,8 @@ namespace CandyShop
             StopAllCoroutines();
             // StopAfter coroutines are dead now — stop any looping VFX directly.
             if (vfx != null) vfx.StopAllLoops();
+            // Spec 9.1: lifted candies settle back the same frame gameplay ends.
+            if (pile != null) pile.EndLiftImmediately();
         }
     }
 

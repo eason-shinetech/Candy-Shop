@@ -22,7 +22,7 @@
 - Power-ups Magnet / Tornado / Freeze each have a particle prefab; silent use is a bug.
 - Wrong candy: remove object, minus 1 star. 3 stars. Timer 0 or 0 stars = Game Over.
 - Persist coins, recipes, daily streak, **and daily stamina** locally.
-- Daily stamina: **20/day**; −1 when a guest becomes current; perfect +1 / pass +0 / confirmed fail −3. Spec §8.2.
+- Daily stamina: **20/day**; −1 when a guest becomes current; perfect +1 (max 5 refunds/day) / pass +0 / confirmed fail −3. Spec §8.2.
 - Reserve `IAdService` (stub in MVP). Ads are opt-in only; see spec §14.
 - Numbers: copy from the spec; expose on ScriptableObjects for tuning.
 
@@ -120,7 +120,7 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 ### Task 5: Economy, save, daily sign-in, recipes
 
 - JSON save fields from spec (including `stamina`, `staminaDate`).
-- Boot: daily +200, streak, 7-day recipe, all-unlocked +500, **stamina refresh to 20 on a new local date**.
+- Boot: daily +500, streak, 7-day recipe +5 stamina, all-unlocked +500, **stamina refresh to 20 on a new local date**.
 - Daily featured-recipe challenge (§8.1): roll type, 12/12 progress, bias, shop 20% off if locked, reward 120 + 1 Freeze.
 - Recipe shop: one recipe per non-starter catalog candy (spec §4). Do not hardcode 7 names.
 - Serve reward formula from spec.
@@ -132,7 +132,7 @@ Copy or import `Candy/` kit into `Assets/Art/Candy/` if Unity will not import ou
 - `StaminaConfig`: dailyMax 20, cost 1, perfect +1, pass 0, fail −3.
 - `StaminaService`: clamp 0–20; spend **only** when a guest becomes current (not waiting queue); save immediately.
 - Main Menu: `n/20`; 开始营业 blocked at 0 → empty sheet (i18n). Generate `icon_stamina.png` per art bible.
-- Serve: perfect +1 / pass +0. If then stamina < 1 → **Shift Over** (no revive, no fail −3).
+- Serve: perfect +1 if under daily refund cap / pass +0. If then stamina < 1 → **Shift Over** (no revive, no fail −3).
 - Fail (stars/timer) or confirmed 放弃本局: −3 on leave without revive. Revive: same guest, no second spend, no −3.
 - HUD floating text: `体力-1` / `体力+1` / `体力-3`.
 - No stamina ads, no timed regen, no overflow.

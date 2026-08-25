@@ -21,6 +21,9 @@ namespace CandyShop
         {
             var rt = (RectTransform)transform;
             Rect sa = Screen.safeArea;
+            // Writing the anchors below fires OnRectTransformDimensionsChange re-entrantly;
+            // the _applied check makes that nested call a no-op and stops the recursion.
+            if (sa == _applied) return;
             _applied = sa;
 
             Vector2 screenSize = new Vector2(Screen.width, Screen.height);

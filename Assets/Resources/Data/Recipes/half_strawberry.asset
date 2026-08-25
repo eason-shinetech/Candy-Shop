@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: half_strawberry
   candyType: {fileID: 11400000, guid: 20bdde30697839d4190e38f89b8b6755, type: 2}
-  cost: 1560
+  cost: 3000
+  starRank: 2
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

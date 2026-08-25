@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &5241796159686722111
+--- !u!1 &8766108598769452447
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8908449715150331085}
-  - component: {fileID: 2214462012897481509}
-  - component: {fileID: 4455351666234877119}
+  - component: {fileID: 5587187848684492411}
+  - component: {fileID: 4906770814831043950}
+  - component: {fileID: 1452012908897242877}
   m_Layer: 0
   m_Name: Candy_chocolate_bar
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8908449715150331085
+--- !u!4 &5587187848684492411
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5241796159686722111}
+  m_GameObject: {fileID: 8766108598769452447}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071069, y: 0, z: 0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -33,21 +33,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &2214462012897481509
+--- !u!33 &4906770814831043950
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5241796159686722111}
+  m_GameObject: {fileID: 8766108598769452447}
   m_Mesh: {fileID: 8462436368650858609, guid: db1a60bb996c9d14fab9d9796c920d26, type: 3}
---- !u!23 &4455351666234877119
+--- !u!23 &1452012908897242877
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5241796159686722111}
+  m_GameObject: {fileID: 8766108598769452447}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

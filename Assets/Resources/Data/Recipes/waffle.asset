@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: waffle
   candyType: {fileID: 11400000, guid: 2f780a352e2ebf84498c3ec977199362, type: 2}
-  cost: 4260
+  cost: 10000
+  starRank: 5
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

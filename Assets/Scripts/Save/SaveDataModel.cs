@@ -34,6 +34,14 @@ namespace CandyShop
         // as a new date by StaminaService and refreshed to dailyMax.
         public int stamina = 20;
         public string staminaDate = "";
+        // Perfect stamina refunds used today (resets with staminaDate on date roll).
+        public int perfectStaminaRefundsToday = 0;
+
+        // Times the daily streak reached 7 (supplements 2.0 sign-in long-line track).
+        public int sevenCyclesCompleted = 0;
+
+        // Owned-count collection milestones already granted (supplements 2.0).
+        public string[] collectionMilestonesDone = new string[0];
 
         // Active locale: "zh" or "en" (i18n spec section 1).
         public string language = "";

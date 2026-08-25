@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: cookie_A
   displayNameZh: "\u66F2\u5947\u7CD6"
   displayNameEn: Cookie
-  prefab: {fileID: 7199973511113889377, guid: c9a273b0c23d6154cb72b2bed4073daa, type: 3}
+  prefab: {fileID: 3050310597174937634, guid: c9a273b0c23d6154cb72b2bed4073daa, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.72156864, g: 0.9098039, b: 1, a: 1}

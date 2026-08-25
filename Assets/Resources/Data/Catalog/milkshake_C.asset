@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: milkshake_C
   displayNameZh: "\u5976\u6614\u7CD6"
   displayNameEn: Milkshake
-  prefab: {fileID: 8543556671272205560, guid: 9891c7a354206d74ca13cf9dfabd63cd, type: 3}
+  prefab: {fileID: 3610467453107785690, guid: 9891c7a354206d74ca13cf9dfabd63cd, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.78431374, g: 0.9607843, b: 0.83137256, a: 1}

@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: candyblock
   displayNameZh: "\u7CD6\u679C"
   displayNameEn: Candy
-  prefab: {fileID: 3017993757041723902, guid: b1d9cf60016194b42b4132b922c88107, type: 3}
+  prefab: {fileID: 6345689710104328542, guid: b1d9cf60016194b42b4132b922c88107, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.78431374, g: 0.9607843, b: 0.83137256, a: 1}

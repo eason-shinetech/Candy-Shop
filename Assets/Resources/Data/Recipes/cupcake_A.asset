@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: cupcake_A
   candyType: {fileID: 11400000, guid: 6864add45cd65144f9f31f6698c791bf, type: 2}
-  cost: 1200
+  cost: 3000
+  starRank: 2
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

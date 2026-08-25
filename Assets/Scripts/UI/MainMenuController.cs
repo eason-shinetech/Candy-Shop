@@ -60,6 +60,21 @@ namespace CandyShop
             RefreshAll();
             I18nService.OnLanguageChanged += RefreshAll;
 
+            // Catch-up: collection milestones may be pending from a previous unlock (supplements 2.0).
+            CollectionService.CheckOwnedMilestones(SaveDataService.Current, _game.recipesSortedByCost);
+
+            // Toasts waiting from the collection long line / fail coin penalty.
+            if (CollectionService.PendingGrantName != null)
+            {
+                StartCoroutine(ShowMenuToast(I18nService.Get("special_toast", CollectionService.PendingGrantName)));
+                CollectionService.PendingGrantName = null;
+            }
+            else if (GameHUDController.PendingCoinPenaltyToast > 0)
+            {
+                StartCoroutine(ShowMenuToast(I18nService.Get("coin_penalty_toast", GameHUDController.PendingCoinPenaltyToast)));
+                GameHUDController.PendingCoinPenaltyToast = 0;
+            }
+
             // Show the sign-in popup when this boot granted something.
             var result = DailySignInService.LastBootResult;
             if (result != null && result.anyReward)
@@ -69,6 +84,8 @@ namespace CandyShop
                     body += I18nService.Get("signin_coins", result.coinsGranted) + "\n";
                 if (!string.IsNullOrEmpty(result.grantedRecipeName))
                     body += I18nService.Get("signin_streak_reward", LocalizeCandyName(result.grantedRecipeName)) + "\n";
+                if (result.staminaGranted > 0)
+                    body += I18nService.Get("signin_streak_stamina", result.staminaGranted) + "\n";
                 if (result.allUnlockedBonus > 0)
                     body += I18nService.Get("signin_all_recipes", result.allUnlockedBonus);
                 _signInBody.text = body.TrimEnd();
@@ -95,7 +112,7 @@ namespace CandyShop
             safeRoot.gameObject.AddComponent<SafeAreaFitter>();
 
             // Coins top-right
-            var coinsPanel = UIKit.CreatePanel(safeRoot, "Coins", UIKit.Cream);
+            var coinsPanel = UIKit.CreatePanel(safeRoot, "Coins", Color.white, spriteName: UIKit.PanelSprite);
             coinsPanel.sizeDelta = new Vector2(280, 90);
             coinsPanel.anchorMin = new Vector2(1, 1);
             coinsPanel.anchorMax = new Vector2(1, 1);
@@ -110,7 +127,7 @@ namespace CandyShop
                 new Vector2(0, 0), new Vector2(1, 1), new Vector2(80, 0), new Vector2(-8, 0));
 
             // Stamina n/20 next to coins (spec 8.2 Main Menu gate)
-            var staminaPanel = UIKit.CreatePanel(safeRoot, "Stamina", UIKit.Cream);
+            var staminaPanel = UIKit.CreatePanel(safeRoot, "Stamina", Color.white, spriteName: UIKit.PanelSprite);
             staminaPanel.sizeDelta = new Vector2(280, 90);
             staminaPanel.anchorMin = new Vector2(1, 1);
             staminaPanel.anchorMax = new Vector2(1, 1);
@@ -159,12 +176,12 @@ namespace CandyShop
             }
 
             // Daily recipe banner
-            var banner = UIKit.CreatePanel(safeRoot, "ChallengeBanner", UIKit.Grape);
+            var banner = UIKit.CreatePanel(safeRoot, "ChallengeBanner", Color.white, spriteName: UIKit.PanelSprite);
             banner.anchorMin = new Vector2(0.5f, 1);
             banner.anchorMax = new Vector2(0.5f, 1);
             banner.sizeDelta = new Vector2(900, 120);
             banner.anchoredPosition = new Vector2(0, -880);
-            _challengeBanner = UIKit.CreateText(banner, "", 38, Color.white);
+            _challengeBanner = UIKit.CreateText(banner, "", 38, UIKit.Cocoa);
             _challengeBanner.name = "ChallengeBannerText";
             UIKit.Stretch((RectTransform)_challengeBanner.transform, banner);
             var bannerBtn = banner.gameObject.AddComponent<Button>();
@@ -181,7 +198,8 @@ namespace CandyShop
             startRt.anchoredPosition = new Vector2(0, -100);
             _startButton.onClick.AddListener(OnStartTapped);
 
-            var shopBtn = UIKit.CreateButton(safeRoot, "", new Vector2(760, 160), UIKit.SkyMint, 48, UIKit.Cocoa);
+            var shopBtn = UIKit.CreateButton(safeRoot, "", new Vector2(760, 160), Color.white, 48,
+                spriteName: UIKit.ButtonSecondary);
             _shopButton = shopBtn;
             var shopRt = (RectTransform)shopBtn.transform;
             shopRt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -189,7 +207,8 @@ namespace CandyShop
             shopRt.anchoredPosition = new Vector2(0, -340);
             shopBtn.onClick.AddListener(() => SceneManager.LoadScene(SceneNames.RecipeShop));
 
-            var settingsBtn = UIKit.CreateButton(safeRoot, "", new Vector2(400, 120), new Color(0.78f, 0.75f, 0.7f), 40, UIKit.Cocoa);
+            var settingsBtn = UIKit.CreateButton(safeRoot, "", new Vector2(400, 120), Color.white, 40,
+                spriteName: UIKit.ButtonSecondary);
             _settingsButton = settingsBtn;
             var setRt = (RectTransform)settingsBtn.transform;
             setRt.anchorMin = new Vector2(0.5f, 0);
@@ -203,7 +222,7 @@ namespace CandyShop
             signInDim.GetComponent<Image>().raycastTarget = true;
             _signInPopup = signInDim.gameObject;
 
-            var panel = UIKit.CreatePanel(signInDim, "SignInPanel", UIKit.Cream);
+            var panel = UIKit.CreatePanel(signInDim, "SignInPanel", Color.white, spriteName: UIKit.PanelSprite);
             panel.sizeDelta = new Vector2(880, 800);
             panel.anchoredPosition = Vector2.zero;
 
@@ -231,7 +250,8 @@ namespace CandyShop
             bodyRt.sizeDelta = new Vector2(780, 220);
             bodyRt.anchoredPosition = new Vector2(0, -30);
 
-            _extraAdButton = UIKit.CreateButton(panel, "", new Vector2(660, 130), UIKit.Lemon, 38, UIKit.Cocoa);
+            _extraAdButton = UIKit.CreateButton(panel, "", new Vector2(660, 130), Color.white, 38,
+                spriteName: UIKit.ButtonSecondary);
             _extraAdButton.transform.localPosition = new Vector3(0, -220, 0);
             _extraAdButton.onClick.AddListener(ClaimExtraAd);
 
@@ -247,7 +267,7 @@ namespace CandyShop
             setDim.GetComponent<Image>().raycastTarget = true;
             _settingsPopup = setDim.gameObject;
 
-            var sp = UIKit.CreatePanel(setDim, "SettingsPanel", UIKit.Cream);
+            var sp = UIKit.CreatePanel(setDim, "SettingsPanel", Color.white, spriteName: UIKit.PanelSprite);
             sp.sizeDelta = new Vector2(760, 760);
             sp.anchoredPosition = Vector2.zero;
 
@@ -272,8 +292,8 @@ namespace CandyShop
 
             AddLanguageToggle(sp, -150);
 
-            var closeSet = UIKit.CreateButton(sp, "", new Vector2(360, 110),
-                new Color(0.78f, 0.75f, 0.7f), 38, UIKit.Cocoa);
+            var closeSet = UIKit.CreateButton(sp, "", new Vector2(360, 110), Color.white, 38,
+                spriteName: UIKit.ButtonSecondary);
             closeSet.transform.localPosition = new Vector3(0, -300, 0);
             closeSet.onClick.AddListener(() => _settingsPopup.SetActive(false));
 
@@ -297,7 +317,8 @@ namespace CandyShop
             trt.offsetMax = new Vector2(350, 0);
 
             var btn = UIKit.CreateButton(row.transform, value ? I18nService.Get("toggle_on") : I18nService.Get("toggle_off"),
-                new Vector2(150, 78), value ? UIKit.SkyMint : new Color(0.72f, 0.72f, 0.72f), 36, UIKit.Cocoa);
+                new Vector2(150, 78), Color.white, 36);
+            btn.image.color = value ? Color.white : new Color(0.72f, 0.72f, 0.72f);
             var brt = (RectTransform)btn.transform;
             brt.anchorMin = new Vector2(1, 0.5f);
             brt.anchorMax = new Vector2(1, 0.5f);
@@ -309,7 +330,7 @@ namespace CandyShop
                 bool isOn = txt.text == I18nService.Get("toggle_on");
                 isOn = !isOn;
                 txt.text = isOn ? I18nService.Get("toggle_on") : I18nService.Get("toggle_off");
-                btn.image.color = isOn ? UIKit.SkyMint : new Color(0.72f, 0.72f, 0.72f);
+                btn.image.color = isOn ? Color.white : new Color(0.72f, 0.72f, 0.72f);
                 onChanged(isOn);
             });
 
@@ -335,7 +356,7 @@ namespace CandyShop
             var currentIsEn = I18nService.Language == "en";
             _langToggleButton = UIKit.CreateButton(row.transform,
                 currentIsEn ? I18nService.Get("lang_zh") : I18nService.Get("lang_en"),
-                new Vector2(150, 78), UIKit.Grape, 32);
+                new Vector2(150, 78), Color.white, 32, spriteName: UIKit.ButtonSecondary);
             var btn = _langToggleButton;
             var brt = (RectTransform)btn.transform;
             brt.anchorMin = new Vector2(1, 0.5f);
@@ -369,6 +390,7 @@ namespace CandyShop
             if (_emptyStaminaSheet != null)
             {
                 _emptyStaminaSheet.SetActive(true);
+                RefreshEmptyStaminaSheet();
                 return;
             }
 
@@ -377,21 +399,40 @@ namespace CandyShop
             dim.GetComponent<Image>().raycastTarget = true;
             _emptyStaminaSheet = dim.gameObject;
 
-            var panel = UIKit.CreatePanel(dim, "EmptyStaminaPanel", UIKit.Cream);
-            panel.sizeDelta = new Vector2(800, 520);
+            var panel = UIKit.CreatePanel(dim, "EmptyStaminaPanel", Color.white, spriteName: UIKit.PanelSprite);
+            panel.sizeDelta = new Vector2(800, 640);
             panel.anchoredPosition = Vector2.zero;
 
             var title = UIKit.CreateText(panel, "", 56, UIKit.Berry);
             title.name = "EmptyTitle";
-            title.rectTransform.anchoredPosition = new Vector2(0, 140);
+            title.rectTransform.anchoredPosition = new Vector2(0, 220);
 
             var body = UIKit.CreateText(panel, "", 40, UIKit.Cocoa);
             body.name = "EmptyBody";
-            body.rectTransform.anchoredPosition = new Vector2(0, 20);
+            body.rectTransform.anchoredPosition = new Vector2(0, 100);
 
             var close = UIKit.CreateButton(panel, "", new Vector2(400, 120), UIKit.SugarPink);
-            close.transform.localPosition = new Vector3(0, -140, 0);
+            close.transform.localPosition = new Vector3(0, -200, 0);
             close.onClick.AddListener(() => _emptyStaminaSheet.SetActive(false));
+
+            // Opt-in watch-ad stamina (supplements 2.0): only when an ad is ready; never auto-play.
+            var adBtn = UIKit.CreateButton(panel, "", new Vector2(400, 120), Color.white, 34,
+                spriteName: UIKit.ButtonSecondary);
+            adBtn.name = "StaminaAdButton";
+            adBtn.transform.localPosition = new Vector3(0, -60, 0);
+            adBtn.onClick.AddListener(() =>
+            {
+                var ads = AdServiceLocator.Service;
+                if (ads == null || !ads.IsReady(AdPlacement.reward_stamina)) return;
+                ads.ShowRewarded(AdPlacement.reward_stamina, ok =>
+                {
+                    if (!ok) return;
+                    var cfg = _game.staminaConfig;
+                    StaminaService.GrantHardClamped(cfg != null ? cfg.staminaAdGrant : 5);
+                    RefreshAll();
+                    _emptyStaminaSheet.SetActive(false);
+                });
+            });
 
             // Fill texts now (and again on language change via RefreshAll).
             SetTextSafe(panel, "EmptyTitle", I18nService.Get("stamina_empty_title"));
@@ -399,11 +440,42 @@ namespace CandyShop
             SetButtonText(close, I18nService.Get("btn_confirm"));
         }
 
+        // Show/hide the stamina-ad button on the empty sheet per readiness (supplements 2.0).
+        private void RefreshEmptyStaminaSheet()
+        {
+            if (_emptyStaminaSheet == null || !_emptyStaminaSheet.activeSelf) return;
+            var adBtnTr = _emptyStaminaSheet.transform.Find("EmptyStaminaPanel/StaminaAdButton") as RectTransform;
+            if (adBtnTr == null) return;
+            var ads = AdServiceLocator.Service;
+            bool ready = ads != null && ads.IsReady(AdPlacement.reward_stamina) && !StaminaService.CanStartGuest;
+            adBtnTr.gameObject.SetActive(ready);
+            var txt = adBtnTr.GetComponentInChildren<Text>();
+            if (txt != null && ready)
+            {
+                var cfg = _game.staminaConfig;
+                txt.text = I18nService.Get("ad_stamina", cfg != null ? cfg.staminaAdGrant : 5);
+            }
+        }
+
         private IEnumerator RestoreStartColorNextFrame()
         {
             yield return null;
             if (_startButton != null && StaminaService.CanStartGuest)
-                _startButton.image.color = UIKit.SugarPink;
+                _startButton.image.color = Color.white;
+        }
+
+        private IEnumerator ShowMenuToast(string message)
+        {
+            yield return new WaitForSeconds(0.4f);
+            var toast = UIKit.CreatePanel(_canvas.transform, "MenuToast", Color.white, spriteName: UIKit.PanelSprite);
+            toast.anchorMin = new Vector2(0.5f, 0.35f);
+            toast.anchorMax = new Vector2(0.5f, 0.35f);
+            toast.sizeDelta = new Vector2(900, 130);
+            toast.anchoredPosition = Vector2.zero;
+            var txt = UIKit.CreateText(toast, message, 38, UIKit.Cocoa);
+            UIKit.Stretch((RectTransform)txt.transform, toast);
+            yield return new WaitForSeconds(2.4f);
+            Destroy(toast.gameObject);
         }
 
         private void ClaimExtraAd()
@@ -441,10 +513,13 @@ namespace CandyShop
             _staminaText.text = I18nService.Get("stamina_label_frac", StaminaService.Current,
                 _game.staminaConfig != null ? _game.staminaConfig.dailyMax : 20);
 
+            // Stamina-ad button readiness on the empty sheet (supplements 2.0).
+            RefreshEmptyStaminaSheet();
+
             // Start button look tracks the gate (spec 8.2: grey when empty).
             if (_startButton != null)
                 _startButton.image.color = StaminaService.CanStartGuest
-                    ? UIKit.SugarPink
+                    ? Color.white
                     : new Color(0.78f, 0.74f, 0.72f);
 
             _titleText.text = I18nService.Get("app_title");

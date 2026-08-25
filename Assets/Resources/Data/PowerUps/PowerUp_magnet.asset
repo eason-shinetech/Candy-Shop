@@ -15,7 +15,7 @@ MonoBehaviour:
   powerUpId: magnet
   displayNameZh: "\u78C1\u94C1"
   displayNameEn: Magnet
-  buyCost: 50
+  buyCost: 250
   effectDuration: 0
   vfxPrefab: {fileID: 8507761591350966492, guid: 55e422a764530d54aa3be37c9ef2a8f4, type: 3}
   accentColor: {r: 1, g: 0.41960785, b: 0.41960785, a: 1}

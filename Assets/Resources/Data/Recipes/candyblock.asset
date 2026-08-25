@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   recipeId: candyblock
   candyType: {fileID: 11400000, guid: 2a71d485a878eed4e9590b4500a9d9aa, type: 2}
-  cost: 420
+  cost: 1000
+  starRank: 1
+  isSpecial: 0
+  specialTrack: 0
+  baseRecipeId: 

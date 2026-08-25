@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: cottoncandy_A
   displayNameZh: "\u68C9\u82B1\u7CD6"
   displayNameEn: Cotton Candy
-  prefab: {fileID: 3487121554515598137, guid: 3bc80a0ebf2979e45be282aba8e5a786, type: 3}
+  prefab: {fileID: 2606862992750149997, guid: 3bc80a0ebf2979e45be282aba8e5a786, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 1, g: 0.56078434, b: 0.72156864, a: 1}

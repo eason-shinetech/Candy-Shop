@@ -15,7 +15,8 @@ MonoBehaviour:
   typeId: popsicle_Bv3
   displayNameZh: "\u96EA\u7CD5\u7CD6"
   displayNameEn: Ice Pop
-  prefab: {fileID: 8533390290821147536, guid: 97c7159640f778940b4d61bf6cc5d98a, type: 3}
+  prefab: {fileID: 6078408064203676604, guid: 97c7159640f778940b4d61bf6cc5d98a, type: 3}
   isStarter: 0
+  isSpecial: 0
   icon: {fileID: 0}
   chipColor: {r: 0.72156864, g: 0.9098039, b: 1, a: 1}

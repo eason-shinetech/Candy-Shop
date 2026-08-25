@@ -15,7 +15,7 @@ MonoBehaviour:
   powerUpId: tornado
   displayNameZh: "\u9F99\u5377\u98CE"
   displayNameEn: Tornado
-  buyCost: 40
+  buyCost: 200
   effectDuration: 4
   vfxPrefab: {fileID: 1358509820861029363, guid: 7da80d17eaace2a46b983079b825d05c, type: 3}
   accentColor: {r: 0.55, g: 0.85, b: 0.65, a: 1}
