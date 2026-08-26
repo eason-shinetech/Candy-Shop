@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace CandyShop
@@ -36,6 +37,24 @@ namespace CandyShop
         }
 
         public static int Coins => Save != null ? Save.coins : 0;
+
+        // Formats large coin values with K/M suffixes to fit narrow UI labels.
+        public static string FormatCoins(int value)
+        {
+            if (value >= 1_000_000)
+            {
+                double m = value / 1000d / 1000d;
+                return m == Math.Floor(m) ? ((int)m).ToString() + "M"
+                                          : m.ToString("0.0") + "M";
+            }
+            if (value >= 1_000)
+            {
+                double k = value / 1000d;
+                return k == Math.Floor(k) ? ((int)k).ToString() + "K"
+                                          : k.ToString("0.0") + "K";
+            }
+            return value.ToString();
+        }
 
         public static void AddCoins(int amount)
         {

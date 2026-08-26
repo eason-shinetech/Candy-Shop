@@ -31,8 +31,7 @@ namespace CandyShop
         [Header("Sign-in popup")]
         [SerializeField] private GameObject _signInPopup;
         [SerializeField] private TMP_Text _signInTitle;
-        [SerializeField] private TMP_Text _signInBody;
-        [SerializeField] private Image[] _signInDots; // 7
+        [SerializeField] private DailyRewardCard[] _signInCards; // 7 cards in the grid
         [SerializeField] private Button _extraAdButton;
         [SerializeField] private Button _claimButton;
 
@@ -96,16 +95,37 @@ namespace CandyShop
             var result = DailySignInService.LastBootResult;
             if (result != null && result.anyReward)
             {
-                string body = "";
-                if (result.coinsGranted > 0)
-                    body += I18nService.Get("signin_coins", result.coinsGranted) + "\n";
-                if (!string.IsNullOrEmpty(result.grantedRecipeName))
-                    body += I18nService.Get("signin_streak_reward", LocalizeCandyName(result.grantedRecipeName)) + "\n";
-                if (result.staminaGranted > 0)
-                    body += I18nService.Get("signin_streak_stamina", result.staminaGranted) + "\n";
-                if (result.allUnlockedBonus > 0)
-                    body += I18nService.Get("signin_all_recipes", result.allUnlockedBonus);
-                _signInBody.text = body.TrimEnd();
+                // Populate the 7-day reward grid.
+                SaveDataModel save = SaveDataService.Current;
+                int streak = save.dailyStreak;
+                EconomyConfig econ = _game.economyConfig;
+                StaminaConfig staminaCfg = Resources.Load<StaminaConfig>("Data/StaminaConfig");
+                int dailyCoins = econ != null ? econ.dailyCoins : 500;
+                int signInStamina = staminaCfg != null ? staminaCfg.signInStaminaGrant : 3;
+                int streakSevenStamina = econ != null ? econ.streakSevenStaminaGrant : 5;
+
+                for (int i = 0; i < 7; i++)
+                {
+                    int day = i + 1;
+                    bool claimed = day < streak;
+                    DailyRewardCard.RewardType rewardType;
+                    int rewardValue;
+
+                    if (day == 7)
+                    {
+                        rewardType = DailyRewardCard.RewardType.Recipe;
+                        rewardValue = streak;
+                    }
+                    else
+                    {
+                        rewardType = DailyRewardCard.RewardType.Coins;
+                        rewardValue = dailyCoins;
+                    }
+
+                    if (_signInCards != null && i < _signInCards.Length)
+                        _signInCards[i].Init(day, rewardType, rewardValue, claimed);
+                }
+
                 bool canExtra = result.dailyExtraAdAvailable && _game.AllowOptionalAds &&
                                 AdServiceLocator.Service != null &&
                                 AdServiceLocator.Service.IsReady(AdPlacement.reward_daily_extra);
@@ -244,7 +264,7 @@ namespace CandyShop
             var ads = AdServiceLocator.Service;
             if (ads == null || !ads.IsReady(AdPlacement.reward_daily_extra))
             {
-                _signInBody.text = I18nService.Get("ad_not_ready");
+                StartCoroutine(ShowMenuToast(I18nService.Get("ad_not_ready")));
                 return;
             }
             ads.ShowRewarded(AdPlacement.reward_daily_extra, ok =>
@@ -270,7 +290,7 @@ namespace CandyShop
         private void RefreshAll()
         {
             var save = SaveDataService.Current;
-            _coinsText.text = I18nService.Get("label_coins", save.coins);
+            _coinsText.text = I18nService.Get("label_coins", EconomyManager.FormatCoins(save.coins));
             _staminaText.text = I18nService.Get("stamina_label_frac", StaminaService.Current,
                 _game.staminaConfig != null ? _game.staminaConfig.dailyMax : 20);
 
@@ -292,10 +312,9 @@ namespace CandyShop
                 ? I18nService.Get("best_served", save.bestCustomersServed)
                 : I18nService.Get("menu_first_day");
 
-            // Streak dots: filled = days in the current cycle up to 7.
+            // Streak dots (main menu row) — keep for the header display.
             int filled = Mathf.Clamp(save.dailyStreak, 0, 7);
             SetDotsFilled(_streakDots, filled);
-            SetDotsFilled(_signInDots, filled); // popup dots mirror the row
 
             // Daily recipe banner
             var cfg = _game.dailyChallengeConfig;
@@ -350,6 +369,15 @@ namespace CandyShop
             SetButtonText(_claimButton, I18nService.Get("signin_claim"));
             if (_signInTitle != null)
                 _signInTitle.text = I18nService.Get("signin_title");
+
+            // Show/hide the sign-in card grid based on whether there's anything to show.
+            bool hasSignInReward = DailySignInService.LastBootResult != null &&
+                                   DailySignInService.LastBootResult.anyReward;
+            if (_signInCards != null)
+            {
+                foreach (var card in _signInCards)
+                    if (card != null) card.gameObject.SetActive(hasSignInReward);
+            }
 
             // Empty-stamina sheet texts (in case the locale changed while it exists).
             if (_emptyStaminaSheet != null && _emptyStaminaSheet.activeSelf)

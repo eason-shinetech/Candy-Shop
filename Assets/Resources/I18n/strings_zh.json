@@ -90,7 +90,7 @@
     },
     {
       "key": "label_coins",
-      "value": "金币 {0}"
+      "value": "{0}"
     },
     {
       "key": "label_music",
@@ -157,6 +157,10 @@
       "value": "每日签到"
     },
     {
+      "key": "signin_day",
+      "value": "第{0}天"
+    },
+    {
       "key": "signin_claim",
       "value": "领取"
     },
@@ -174,7 +178,7 @@
     },
     {
       "key": "signin_streak_reward",
-      "value": "连续签到奖励：解锁新配方 {0}"
+      "value": "配方"
     },
     {
       "key": "signin_streak_stamina",
@@ -366,7 +370,7 @@
     },
     {
       "key": "stamina_label_frac",
-      "value": "体力 {0}/{1}"
+      "value": "{0}/{1}"
     },
     {
       "key": "stamina_minus_one",
