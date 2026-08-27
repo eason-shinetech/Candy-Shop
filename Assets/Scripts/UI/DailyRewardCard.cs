@@ -16,9 +16,9 @@ namespace CandyShop
         }
 
         [Header("Visual refs")]
-        [SerializeField] private Text _dayLabel;
+        [SerializeField] private TextMeshProUGUI _dayLabel;
         [SerializeField] private Image _iconImage;
-        [SerializeField] private Text _rewardText;
+        [SerializeField] private TextMeshProUGUI _rewardText;
         [SerializeField] private Image _checkmarkOverlay;
         [SerializeField] private Image _backgroundImage;
 

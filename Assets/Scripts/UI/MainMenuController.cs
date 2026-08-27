@@ -19,7 +19,6 @@ namespace CandyShop
         [SerializeField] private TMP_Text _bestText;
         [SerializeField] private TMP_Text _titleText;
         [SerializeField] private TMP_Text _subtitleText;
-        [SerializeField] private Image[] _streakDots; // 7
         [SerializeField] private TMP_Text _challengeBannerText;
 
         [Header("Buttons")]
@@ -31,7 +30,7 @@ namespace CandyShop
         [Header("Sign-in popup")]
         [SerializeField] private GameObject _signInPopup;
         [SerializeField] private TMP_Text _signInTitle;
-        [SerializeField] private DailyRewardCard[] _signInCards; // 7 cards in the grid
+        [SerializeField] private DailyRewardCard[] _signInCards;
         [SerializeField] private Button _extraAdButton;
         [SerializeField] private Button _claimButton;
 
@@ -68,7 +67,40 @@ namespace CandyShop
             }
             _game = FindObjectOfType<GameManager>();
             _game.EnsureConfigs();
+            WireSignInPanel();
             WireButtons();
+        }
+
+        private void WireSignInPanel()
+        {
+            if (_signInPopup == null) return;
+            var panel = _signInPopup.transform.Find("SignInPanel");
+            if (panel == null) return;
+
+            var titleText = panel.Find("Title/Text");
+            if (titleText != null) _signInTitle = titleText.GetComponent<TMP_Text>();
+
+            var grid = panel.Find("CardGrid");
+            bool needsPopulate = grid != null && (_signInCards == null || _signInCards.Length == 0);
+            if (!needsPopulate && grid != null)
+            {
+                bool anyNull = false;
+                for (int i = 0; i < _signInCards.Length; i++)
+                    if (_signInCards[i] == null) { anyNull = true; break; }
+                if (anyNull) needsPopulate = true;
+            }
+            if (needsPopulate)
+            {
+                _signInCards = new DailyRewardCard[grid.childCount];
+                for (int i = 0; i < grid.childCount; i++)
+                    _signInCards[i] = grid.GetChild(i).GetComponent<DailyRewardCard>();
+            }
+
+            var extraAd = panel.Find("ExtraAdButton");
+            if (extraAd != null) _extraAdButton = extraAd.GetComponent<Button>();
+
+            var claim = panel.Find("ClaimButton");
+            if (claim != null) _claimButton = claim.GetComponent<Button>();
         }
 
         private void Start()
@@ -104,14 +136,15 @@ namespace CandyShop
                 int signInStamina = staminaCfg != null ? staminaCfg.signInStaminaGrant : 3;
                 int streakSevenStamina = econ != null ? econ.streakSevenStaminaGrant : 5;
 
-                for (int i = 0; i < 7; i++)
+                int totalDays = _signInCards != null ? _signInCards.Length : 5;
+                for (int i = 0; i < totalDays; i++)
                 {
                     int day = i + 1;
                     bool claimed = day < streak;
                     DailyRewardCard.RewardType rewardType;
                     int rewardValue;
 
-                    if (day == 7)
+                    if (day == totalDays)
                     {
                         rewardType = DailyRewardCard.RewardType.Recipe;
                         rewardValue = streak;
@@ -312,10 +345,6 @@ namespace CandyShop
                 ? I18nService.Get("best_served", save.bestCustomersServed)
                 : I18nService.Get("menu_first_day");
 
-            // Streak dots (main menu row) — keep for the header display.
-            int filled = Mathf.Clamp(save.dailyStreak, 0, 7);
-            SetDotsFilled(_streakDots, filled);
-
             // Daily recipe banner
             var cfg = _game.dailyChallengeConfig;
             var featuredType = DailySignInService.GetFeatured(_game.catalog, save);
@@ -385,14 +414,6 @@ namespace CandyShop
                 _emptyStaminaTitle.text = I18nService.Get("stamina_empty_title");
                 _emptyStaminaBody.text = I18nService.Get("stamina_empty_body");
             }
-        }
-
-        private static void SetDotsFilled(Image[] dots, int filled)
-        {
-            if (dots == null) return;
-            for (int i = 0; i < dots.Length; i++)
-                if (dots[i] != null)
-                    dots[i].color = i < filled ? UIKit.Berry : new Color(1, 1, 1, 0.35f);
         }
 
         // Saved rewards store the zh name; re-localize it for the active locale.
