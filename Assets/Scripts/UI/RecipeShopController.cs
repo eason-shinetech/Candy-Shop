@@ -62,7 +62,7 @@ namespace CandyShop
 
         private void RefreshCoins()
         {
-            _coinsText.text = string.Format(I18nService.Get("label_coins"), EconomyManager.Coins);
+            _coinsText.text = string.Format(I18nService.Get("label_coins"), EconomyManager.FormatCoins(EconomyManager.Coins));
         }
 
         private void RebuildList()

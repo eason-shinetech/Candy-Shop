@@ -269,6 +269,10 @@ namespace CandyShop
             _shiftOverPopup.SetActive(false);
             _tutorialPopup.SetActive(false);
 
+            _comboText.text = "";
+            _perfectStamp.text = "";
+            _staminaFloatText.text = "";
+
             RefreshLocalizedTexts();
             RefreshCoins();
             RefreshStars(3);
@@ -407,7 +411,7 @@ namespace CandyShop
 
         private void RefreshCoins()
         {
-            if (_coinsText != null) _coinsText.text = string.Format(I18nService.Get("label_coins"), EconomyManager.Coins);
+            if (_coinsText != null) _coinsText.text = string.Format(I18nService.Get("label_coins"), EconomyManager.FormatCoins(EconomyManager.Coins));
         }
 
         private void RefreshStaminaLabel()
@@ -523,10 +527,6 @@ namespace CandyShop
                 for (int i = 0; i < _pauseToggleLabels.Length && i < PauseToggleKeys.Length; i++)
                     if (_pauseToggleLabels[i] != null)
                         _pauseToggleLabels[i].text = I18nService.Get(PauseToggleKeys[i]);
-
-            // Power-up button labels: stored references, no hierarchy walking.
-            foreach (var entry in _powerButtons)
-                entry.LabelText.text = entry.Def.LocalizedName;
 
             if (_pauseLangLabel != null)
                 _pauseLangLabel.text = I18nService.Get("label_language");
@@ -906,7 +906,7 @@ namespace CandyShop
             bool newBest = reason != "aborted" && _game.CustomersServed > _bestAtRunStart && _game.CustomersServed > 0;
             _gameOverStats.text =
                 string.Format(I18nService.Get("game_over_served"), _game.CustomersServed) + "\n" +
-                string.Format(I18nService.Get("game_over_coins"), _game.CoinsEarnedThisRun) + "\n" +
+                string.Format(I18nService.Get("game_over_coins"), EconomyManager.FormatCoins(_game.CoinsEarnedThisRun)) + "\n" +
                 string.Format(I18nService.Get("game_over_best"), save.bestCustomersServed) + "\n" +
                 string.Format(I18nService.Get("game_over_stamina"), StaminaService.Current) +
                 (newBest ? "\n" + I18nService.Get("game_over_record") : "");
@@ -942,7 +942,7 @@ namespace CandyShop
             bool newBest = _game.CustomersServed > _bestAtRunStart && _game.CustomersServed > 0;
             _shiftOverStats.text =
                 string.Format(I18nService.Get("game_over_served"), _game.CustomersServed) + "\n" +
-                string.Format(I18nService.Get("game_over_coins"), _game.CoinsEarnedThisRun) + "\n" +
+                string.Format(I18nService.Get("game_over_coins"), EconomyManager.FormatCoins(_game.CoinsEarnedThisRun)) + "\n" +
                 string.Format(I18nService.Get("game_over_best"), save.bestCustomersServed) +
                 (newBest ? "\n" + I18nService.Get("game_over_record") : "");
         }

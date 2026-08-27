@@ -8,16 +8,13 @@ namespace CandyShop
     public class PowerButton : MonoBehaviour
     {
         [SerializeField] private Image _powerIcon;
-        [SerializeField] private TMP_Text _labelText;
         [SerializeField] private TMP_Text _badgeText;
 
         public PowerUpDefinition Def { get; private set; }
-        public TMP_Text LabelText => _labelText;
 
         public void Setup(PowerUpManager powerUps, PowerUpDefinition def)
         {
             Def = def;
-            _labelText.text = def.LocalizedName;
             string iconPath = def.powerUpId == "magnet" ? "icon_magnet"
                 : def.powerUpId == "tornado" ? "icon_tornado" : "icon_freeze";
             _powerIcon.sprite = UIKit.LoadSprite(iconPath);

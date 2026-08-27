@@ -90,7 +90,7 @@
     },
     {
       "key": "label_coins",
-      "value": "Coins {0}"
+      "value": "{0}"
     },
     {
       "key": "label_music",
@@ -157,6 +157,10 @@
       "value": "Daily Sign-In"
     },
     {
+      "key": "signin_day",
+      "value": "Day {0}"
+    },
+    {
       "key": "signin_claim",
       "value": "Claim"
     },
@@ -174,7 +178,7 @@
     },
     {
       "key": "signin_streak_reward",
-      "value": "Streak reward: unlocked recipe {0}"
+      "value": "Recipe"
     },
     {
       "key": "signin_streak_stamina",
@@ -366,7 +370,7 @@
     },
     {
       "key": "stamina_label_frac",
-      "value": "Stamina {0}/{1}"
+      "value": "{0}/{1}"
     },
     {
       "key": "stamina_minus_one",
